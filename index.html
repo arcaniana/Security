@@ -1,0 +1,1591 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>정보부장 업무매뉴얼</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: 좌측 단계 목록(잠금/완료 표시) + 우측 현재 단계 카드. 체크를 모두 마치면 다음 단계가 열린다. */
+:root{
+  --paper:#f4f5f2; --card:#ffffff; --ink:#1d2a2a; --muted:#5d6b6a; --line:#d9dedb;
+  --accent:#1f5f5b; --accent-soft:#e1efed;
+  --warn:#8a5a00; --warn-bg:#fff3d6; --warn-line:#e8c26a;
+  --ok:#2e7d46; --ok-bg:#e3f3e8; --lock:#98a3a1;
+  --font:'Noto Sans KR',system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#141a1a; --card:#1c2424; --ink:#e6ecea; --muted:#9db0ad; --line:#2f3b3a;
+    --accent:#6cc4bb; --accent-soft:#1f3533;
+    --warn:#f0c15c; --warn-bg:#3a2f12; --warn-line:#6d5718;
+    --ok:#6fcf8b; --ok-bg:#1c3425; --lock:#66736f; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#141a1a; --card:#1c2424; --ink:#e6ecea; --muted:#9db0ad; --line:#2f3b3a;
+  --accent:#6cc4bb; --accent-soft:#1f3533;
+  --warn:#f0c15c; --warn-bg:#3a2f12; --warn-line:#6d5718;
+  --ok:#6fcf8b; --ok-bg:#1c3425; --lock:#66736f; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.6}
+button{font-family:inherit;font-size:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+header.top{position:sticky;top:0;z-index:5;background:var(--card);border-bottom:1px solid var(--line)}
+.top-in{max-width:1120px;margin:0 auto;padding:10px 16px 12px;display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-areas:'title tools' 'tabs ctrl';gap:10px 16px;align-items:center}.t-title{grid-area:title;min-width:0}.tools{grid-area:tools;justify-self:end}.tabs{grid-area:tabs}.ctrl{grid-area:ctrl;display:flex;align-items:center;gap:14px;justify-content:flex-end;min-height:36px}.btn.sm{padding:4px 10px;font-size:13px}
+.top h1{font-size:18px;margin:0;font-weight:700;letter-spacing:-.01em}
+.top .sub{color:var(--muted);font-size:13px}
+.prog{width:140px;display:flex;align-items:center;gap:10px}
+.bar{flex:1;height:10px;border-radius:99px;background:var(--line);overflow:hidden}
+.bar>i{display:block;height:100%;width:0;background:var(--accent);transition:width .3s}
+.prog b{font-variant-numeric:tabular-nums;font-size:13px;white-space:nowrap}
+.tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:6px 12px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+.btn.primary:disabled{background:var(--line);border-color:var(--line);color:var(--muted);cursor:not-allowed}
+.btn.danger{border-color:var(--warn-line);color:var(--warn)}
+.toggle{display:flex;gap:6px;align-items:center;font-size:13px;color:var(--muted);cursor:pointer}
+
+main{max-width:1120px;margin:0 auto;padding:16px;display:grid;grid-template-columns:300px minmax(0,1fr);gap:20px;align-items:start}
+nav.steps{position:sticky;top:78px;max-height:calc(100vh - 94px);overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px}
+.grp{font-size:12px;color:var(--muted);font-weight:700;padding:10px 10px 4px;letter-spacing:.02em}
+.st{display:flex;gap:10px;align-items:center;width:100%;text-align:left;border:0;background:none;border-radius:8px;padding:8px 10px;cursor:pointer}
+.st:hover:not(:disabled){background:var(--accent-soft)}
+.st[aria-current="step"]{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
+.st:disabled{cursor:not-allowed;color:var(--lock)}
+.dot{flex:none;width:24px;height:24px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
+.st.done .dot{background:var(--ok);border-color:var(--ok);color:#fff}
+.st.cur .dot{border-color:var(--accent);color:var(--accent)}
+.st.lock .dot{border-style:dashed}
+.st .t{flex:1;min-width:0;font-size:14px}
+.st .n{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+
+article.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px 24px}
+.eyebrow{font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.03em}
+article h2{font-size:24px;margin:2px 0 10px;line-height:1.3;text-wrap:balance;letter-spacing:-.015em}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+.chip{font-size:12.5px;border:1px solid var(--line);border-radius:99px;padding:2px 10px;color:var(--muted)}
+.chip b{color:var(--ink);font-weight:500}
+.lead{color:var(--muted);margin:8px 0 0;max-width:68ch}
+section.blk{margin-top:22px}
+section.blk h3{font-size:15px;margin:0 0 8px;display:flex;gap:8px;align-items:center}
+.cnt{font-size:12px;font-weight:500;color:var(--muted);font-variant-numeric:tabular-nums}
+ul.chk{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+ul.chk label{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer;background:var(--card)}
+ul.chk label:hover{border-color:var(--accent)}
+ul.chk input{flex:none;width:20px;height:20px;margin-top:2px;accent-color:var(--accent)}
+ul.chk .tx{flex:1;min-width:0}
+ul.chk li.on label{background:var(--ok-bg);border-color:transparent}
+ul.chk li.on .tx>span:first-child{text-decoration:line-through;text-decoration-color:var(--muted);color:var(--muted)}
+ul.chk .sm{display:block;font-size:13px;color:var(--muted);margin-top:2px}
+ul.warn label{background:var(--warn-bg);border-color:var(--warn-line)}
+ul.warn li.on label{background:var(--ok-bg);border-color:transparent}
+ul.warn h3,.warnh{color:var(--warn)}
+.tag.req{background:var(--accent);color:var(--card)}
+.tag.aud{background:var(--accent-soft);color:var(--accent);border:1px solid var(--accent)}
+.tabs{display:flex;gap:4px;flex-wrap:nowrap;overflow-x:auto;max-width:100%;padding:4px;background:var(--paper);border:1px solid var(--line);border-radius:12px;justify-self:start;-webkit-overflow-scrolling:touch;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}.tab{flex:none;white-space:nowrap;border:0;background:transparent;border-radius:9px;padding:7px 14px;font-size:14px;color:var(--ink)}.tab:hover{background:var(--line)}.tab[aria-pressed="true"]:hover{background:var(--accent)}.tab[aria-pressed="true"]{box-shadow:0 1px 3px rgba(0,0,0,.25)}.tab{cursor:pointer;font-weight:700}.tab[aria-pressed="true"]{background:var(--accent);color:#fff}
+.tag{display:inline-block;font-size:11.5px;font-weight:700;border-radius:6px;padding:1px 7px;margin-right:6px;background:var(--warn);color:var(--warn-bg);vertical-align:1px}
+details.more{margin:4px 0 0 32px}
+details.more summary{cursor:pointer;font-size:13px;font-weight:700;color:var(--accent);padding:4px 0}
+details.more dl{margin:4px 0 6px;padding:10px 14px;border-left:3px solid var(--accent);background:var(--accent-soft);border-radius:0 8px 8px 0;font-size:14px}
+details.more dt{font-weight:700;margin-top:8px}details.more dt:first-child{margin-top:0}
+details.more dd{margin:2px 0 0}details.more dd ul{margin:2px 0 0;padding-left:18px}
+.note{margin-top:22px;border-left:4px solid var(--accent);background:var(--accent-soft);padding:10px 14px;border-radius:0 8px 8px 0;font-size:14px}
+.nav{display:flex;justify-content:space-between;gap:12px;margin-top:26px;flex-wrap:wrap;align-items:center}
+.hint{font-size:13px;color:var(--muted)}
+.done-banner{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--ok-bg);color:var(--ok);font-weight:700}
+pre.tree{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px;overflow:auto;font-size:13px;line-height:1.5;margin:8px 0 0}
+.finish{text-align:center;padding:16px 0}
+.finish h2{font-size:26px}
+
+@media (max-width:1040px){.top-in{grid-template-columns:minmax(0,1fr);grid-template-areas:'title' 'tools' 'tabs' 'ctrl'}.tools{justify-self:start}.ctrl{justify-content:space-between}.prog{flex:1;width:auto}}
+@media (max-width:820px){
+  main{grid-template-columns:minmax(0,1fr)}
+  nav.steps{position:static;max-height:none;display:none}
+  nav.steps.open{display:block}
+  .mnav{display:inline-flex}
+  article.card{padding:18px 16px}
+  .top h1{font-size:16px}
+  .top-in{grid-template-columns:minmax(0,1fr);grid-template-areas:'title' 'tools' 'tabs' 'ctrl'}
+  .tools{justify-self:start;flex-wrap:wrap}.ctrl{justify-content:space-between}.prog{flex:1;width:auto}
+}
+@media (min-width:821px){.mnav{display:none}}
+@media (min-width:821px){html,body{height:100%}body{display:flex;flex-direction:column;height:100vh;overflow:hidden}header.top{position:relative;flex:none}main{flex:1;min-height:0;width:100%;grid-template-rows:minmax(0,1fr);align-items:stretch;overflow:hidden}nav.steps{position:static;max-height:none;height:100%;overflow:auto}article#view{min-height:0;height:100%;overflow:auto}}
+@media print{html,body{height:auto!important;overflow:visible!important;display:block!important}main,article#view{height:auto!important;overflow:visible!important;display:block!important}}
+@media (prefers-reduced-motion:reduce){.bar>i{transition:none}}
+.rel .relrow{display:flex;gap:10px;align-items:flex-start;margin:6px 0}.rel .relrow .tag{flex:none;margin-top:2px}.rel ul{margin:0;padding-left:18px;font-size:14px;line-height:1.6}.rel .btn{margin-top:6px}
+.loc{margin:4px 0 2px 28px;padding:6px 10px;border-left:3px solid var(--accent);background:var(--accent-soft);border-radius:0 8px 8px 0;font-size:13px;line-height:1.5}.loc b{color:var(--accent);margin-right:4px}.loc.mon{border-left-color:#c98a1b;background:rgba(201,138,27,.12)}.loc.mon b{color:#c98a1b}.loc .live{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:2px}.loc .live li{display:flex;gap:8px;flex-wrap:wrap}.loc .live span{color:var(--muted)}.loc .live i{font-weight:400;color:var(--muted)}.loc .btn.sm{margin-left:6px;padding:2px 8px}
+.fld{margin:6px 0 2px 28px;display:grid;gap:6px}.fld b{font-size:13px;color:var(--muted)}.fld label{display:grid;grid-template-columns:minmax(0,190px) minmax(0,1fr);gap:8px;align-items:center;font-size:13px}@media (max-width:820px){.fld label{grid-template-columns:1fr}}
+.uses{display:grid;gap:8px}.use{display:flex;gap:12px;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--paper)}
+.use.col{flex-direction:column;align-items:stretch}.sm2{font-size:13px;color:var(--muted)}
+.urlrow{display:flex;gap:8px}.url{flex:1;min-width:0;border:1px solid var(--line);border-radius:8px;padding:6px 10px;font:inherit;background:var(--card);color:var(--ink)}
+.use a.btn,.urlrow a.btn{text-decoration:none;white-space:nowrap}
+
+body.monthly main{grid-template-columns:minmax(0,1fr)}body.monthly nav.steps{display:none}.modeguide{font-size:13px;color:var(--muted);margin:0 0 12px;padding:8px 12px;background:var(--paper);border:1px solid var(--line);border-radius:10px}.modeguide b{color:var(--ink)}.modeguide span{margin-left:6px}
+body.monthly .ctrl,body.monthly #reset{visibility:hidden}body.monthly .mnav{display:none!important}
+.prevbox{margin-top:12px;border:1px solid var(--line);border-radius:10px;padding:12px;background:#fff;color:#111;overflow:auto;font-size:13px}
+select.url{padding:6px 8px}
+.gbox{margin:10px 0;border:1px solid var(--line);border-radius:10px;overflow:hidden}.gtitle{background:var(--accent-soft);color:var(--accent);font-weight:700;padding:6px 12px}
+table.gt{width:100%;border-collapse:collapse;font-size:14px}table.gt th{text-align:left;background:var(--paper);padding:6px 10px;border-bottom:1px solid var(--line);font-size:13px;color:var(--muted)}table.gt td{padding:6px 10px;border-bottom:1px solid var(--line);vertical-align:top}table.gt input{width:100%}
+@media print{@page{size:A4;margin:15mm}body *{visibility:hidden!important}#monPrev,#monPrev *{visibility:visible!important}#monPrev{position:absolute;left:0;top:0;width:100%;border:0!important;padding:0!important;background:#fff}}
+
+.att{margin:6px 0 6px 32px;padding:8px 12px;border:1px dashed var(--line);border-radius:8px}
+.files{list-style:none;margin:6px 0;padding:0;display:grid;gap:6px}.files li{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.thumb{width:56px;height:56px;object-fit:cover;border-radius:6px;border:1px solid var(--line)}.upl{cursor:pointer;display:inline-block}
+body.locked header.top,body.locked main{display:none}
+#lock{display:none;min-height:100vh;align-items:center;justify-content:center;padding:24px}
+body.locked #lock{display:flex}
+.lockbox{width:100%;max-width:380px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:28px 24px;text-align:center}
+.lockbox h1{margin:0 0 4px;font-size:22px;cursor:default;user-select:none;-webkit-user-select:none}
+.lockbox p{margin:0 0 16px;color:var(--muted);font-size:14px}
+.lockbox input{width:100%;margin-bottom:10px;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font:inherit;font-size:18px;text-align:center;letter-spacing:.3em;background:var(--paper);color:var(--ink)}
+.lockbox .btn{width:100%;padding:10px}
+#lockMsg{min-height:22px;margin-top:10px;font-size:14px;color:var(--warn)}
+
+.rolebtns{display:flex;flex-direction:column;gap:8px}
+.rolebtn{width:100%;padding:12px;display:flex;gap:8px;justify-content:center;align-items:baseline}
+.rolebtn span{font-size:13px;color:var(--muted)}
+.lockbox #nm{width:100%;margin-bottom:10px;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font:inherit;font-size:18px;text-align:center;background:var(--paper);color:var(--ink)}
+#lockMsg.ok{color:var(--ok,#1a7a4c)}
+.who{font-size:13px;font-weight:700;margin-right:4px}
+.sync{margin-right:6px}.sync.bad{color:#b3261e}
+#adm{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px}
+#adm[hidden]{display:none}
+.admbox{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;max-width:640px;width:100%;max-height:90vh;overflow:auto}
+.admbox h2{margin:0 0 6px;font-size:18px}.admbox h3{margin:14px 0 4px;font-size:15px}
+.admt{width:100%;border-collapse:collapse;font-size:14px}.admt th,.admt td{border-bottom:1px solid var(--line);padding:6px 4px;text-align:left}
+.admbox textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;font:inherit;background:var(--paper);color:var(--ink)}
+.admrow{margin-top:8px;display:flex;gap:10px;align-items:center}
+.warnb{color:#b3261e}
+</style>
+</head>
+<body class="locked">
+<div id="lock"><div class="lockbox"><h1 id="lockTitle">정보부장 업무매뉴얼</h1><p id="lockSub">불러오는 중...</p>
+<div id="roleBtns" class="rolebtns"></div>
+<form id="lockForm" autocomplete="off" style="display:none"><input type="text" id="nm" autocomplete="off" aria-label="이름" placeholder="이름" style="display:none;letter-spacing:normal"><input type="password" id="pw1" autocomplete="off" aria-label="암호"><input type="password" id="pw2" autocomplete="off" aria-label="새 암호 확인" style="display:none"><button class="btn primary" type="submit" id="lockBtn">들어가기</button><button class="btn" type="button" id="lockBack" style="display:none;margin-top:8px">다른 사람으로 들어가기</button><button class="btn" type="button" id="lockCancel" style="display:none;margin-top:8px">취소</button></form>
+<div id="lockMsg" role="status"></div></div></div>
+<div id="adm" hidden><div class="admbox"><h2>담당자 관리</h2><p class="sm2">담당자를 바꾸거나 1년이 지났을 때 초기화합니다. 초기화하면 이름과 암호가 지워지고(암호 6120), 새 담당자가 첫 접속 때 이름과 새 암호를 정합니다.</p><div id="admBody"></div><h3>기존 데이터 가져오기</h3><p class="sm2">Claude 화면의 매뉴얼에서 "데이터 복사"로 복사한 내용을 붙여 넣습니다. 서버의 체크·입력 내용이 덮어써집니다. 사진·PDF는 가져오지 않으니 다시 올려야 합니다.</p><textarea id="impTxt" rows="3" placeholder="여기에 붙여 넣기"></textarea><div class="admrow"><button class="btn" type="button" id="impGo">가져오기</button><span id="admMsg" class="sm2"></span></div><div class="admrow"><button class="btn primary" type="button" id="admClose">닫기</button></div></div></div>
+<header class="top">
+  <div class="top-in">
+    <div class="t-title">
+      <h1>정보부장 업무매뉴얼</h1>
+      <div class="sub" id="sub">정보 업무 따라하기 · 정보감사 대비를 문서별로 · 체크하면 다음 단계가 열립니다</div>
+    </div>
+    <div class="tools">
+      <button class="btn mnav" id="mnav" type="button">단계 목록</button>
+      <span class="who" id="who"></span><span class="sm2 sync" id="sync"></span>
+      <button class="btn sm" id="adm_open" type="button" style="display:none">담당자 관리</button>
+      <button class="btn sm" id="chgpw" type="button">이름·암호 변경</button>
+      <button class="btn sm" id="dolock" type="button">로그아웃</button>
+      <button class="btn sm danger" id="reset" type="button">처음부터</button>
+    </div>
+    <div class="tabs" id="tabs"></div>
+    <div class="ctrl">
+      <label class="toggle"><input type="checkbox" id="free"> 순서 상관없이 열기</label>
+      <div class="prog"><div class="bar" aria-hidden="true"><i id="barFill"></i></div><b id="progTxt">0%</b></div>
+    </div>
+  </div>
+</header>
+<main>
+  <nav class="steps" id="nav" aria-label="단계 목록"></nav>
+  <article class="card" id="view" aria-live="polite"></article>
+</main>
+
+<script>
+function scTo(a,b){var e=window.matchMedia('(min-width:821px)').matches?document.getElementById('view'):null;if(e){if(typeof a==='object')e.scrollTo(a);else e.scrollTo(a,b);}else{if(typeof a==='object')window.scrollTo(a);else window.scrollTo(a,b);}}
+function scY(){return window.matchMedia('(min-width:821px)').matches?document.getElementById('view').scrollTop:window.scrollY;}
+/* ---------- 내용 ---------- */
+/* w: 확인 필요(2025 지적사항 등). n: 2025 정보보호 감사에서 해당 분야 지적을 받은 학교 수 */
+var HL='홈페이지 관리자 페이지에서 확인합니다.';
+var ALL = [
+ {id:'s0', part:'시작', title:'권한 인계와 증빙 폴더 준비', cov:'공통',
+  basis:'2026년도 학교 보안 감사 및 컨설팅 추진 계획', when:'감사 안내 공문 접수 직후',
+  lead:'감사는 서면 자료 검토(1차)와 미흡 사항 컨설팅(2차, 유선 또는 방문) 순서로 진행됩니다. 문서를 점검하기 전에 접속 권한과 폴더부터 갖춥니다.',
+  todo:[
+   ['홈페이지 관리자 권한을 이전 관리자에게 인계받았다','권한이 없으면 홈페이지에서 확인할 항목을 볼 수 없으니 가장 먼저 요청합니다. 인계 뒤 담당자 변경 내부결재도 확인'],
+   ['Privacy-i, 내PC지키미, 개인정보보호 종합지원시스템 관리자 권한도 인계받았다','담당자 변경 시 접근 권한을 바꿔야 하는 시스템들입니다'],
+   ['감사 계획 공문에서 감사 대상 기간, 제출 기한, 제출 방법을 메모했다','2026년 기준: 2023.1.1.~2026.10.31. 자료, 점검표는 업무관리시스템, 증빙은 G-ONE 드라이브 공유 폴더'],
+   ['붙임 서식 두 가지(수감자료 일반현황, 자체점검표)를 내려받았다','자체점검표는 정보보안, 개인정보보호 두 시트'],
+   ['증빙을 모을 폴더를 만들고 파일 이름 앞에 연도(23_, 24_, 25_, 26_)를 붙이기로 했다','감사 대상이 여러 해라서 연도별로 정렬되어야 합니다']
+  ],
+  warn:[['학교별 4년 주기 감사이므로 올해 문서만 모으지 않았다','매년 같은 폴더에 쌓아 두면 다음 감사 때 그대로 씁니다',0]],
+  ev:[],
+  use:[['home','권한을 받은 뒤 접속되는지 먼저 확인합니다.']],
+  tree:'보안감사/\n├─ 1. 정보보안/\n│   ├─ 1. 정보보안담당관 운영\n│   ├─ 2. 정보보안 교육\n│   ├─ 3. 사이버 보안진단의 날 운영\n│   ├─ 4. 재난방지 대책\n│   ├─ 5. 정보통신시설 보안\n│   ├─ 6. PC 보안관리\n│   ├─ 7. 홈페이지 보안\n│   ├─ 8. 저장매체 불용처리\n│   └─ 9. 용역사업 보안관리\n├─ 2. 개인정보보호/\n│   ├─ 1. 개인정보 내부 관리계획\n│   ├─ 2. 개인정보 보호업무 추진계획 및 교육 실시\n│   ├─ 3. 개인정보처리방침 수립 및 공개\n│   ├─ 4. 개인정보보호책임자\n│   ├─ 5. 개인정보취급자 관리감독\n│   ├─ 6. 개인정보의 안전성 확보 조치\n│   ├─ 7. 개인정보수집\n│   ├─ 8. 개인정보의 이용 및 제공\n│   ├─ 9. 개인정보 위탁\n│   ├─ 10. 개인정보파기\n│   └─ 11. 고정형 영상정보처리기기(CCTV) 운영\n├─ 양식/\n└─ 공문제출/'},
+
+
+ {id:'sites', part:'시작', title:'정보부장 관리 사이트와 권한 인계', sitesStep:true,
+  basis:'정보보안 종합 계획의 담당자 지정, 접근권한 관리', when:'인사 이동 직후, 인수인계 때',
+  lead:'정보 업무 담당자가 관리하는 시스템 목록입니다. 사이트마다 이전 담당자에게 권한을 받고, 주소를 붙여넣어 두면 문서 단계에서 바로 열 수 있습니다. 주소를 아는 것만 채우면 됩니다.',
+  todo:[], warn:[['담당자가 바뀌면 시스템마다 접근 권한 변경 결재가 필요한지 확인했다','접근 권한은 담당자 변경 시 바로 조정해야 합니다',0]], ev:[]},
+
+ {id:'d1', part:'정보보안 문서', title:'정보보안 종합 계획', cov:'정보보안 1·6·8·9',
+  basis:'정보보안 기본지침 제5조, 제59조, 제71~76조', when:'학년 초 수립(내부결재), 담당자가 바뀔 때 갱신',
+  lead:'학교 정보보안 업무 전반을 담는 계획입니다. 감사 항목 여러 개가 이 한 문서에서 확인됩니다. 계획서를 열어 놓고 아래 내용이 들어 있는지 하나씩 확인합니다.',
+  todo:[
+   ['목적과 기본방침(방화벽, 백신·OS 업데이트, 개인정보파일 보호, 교육, 기본지침 준수)이 있다',''],
+   ['정보보안담당관과 부서별 관리자의 직위, 이름이 올해 인사 기준으로 맞다','담당자가 바뀌었는데 이전 이름이 남아 있으면 지적될 수 있습니다'],
+   ['정보보안담당관의 기본활동(보안성 검토, 통신망 보안관리, 교육 총괄, 진단의 날 계획 등)이 적혀 있다',''],
+   ['연수 계획(시기, 대상, 내용)이 이 계획서 안에 들어 있다. 연수 계획 공문을 따로 만들지 않는다','3월에 올리는 정보보안 종합계획에 교육 시기와 대상을 미리 넣어 두면 계획 서류가 됩니다',true],
+   ['사이버보안진단의 날 운영(대상 PC, 내PC지키미 점검, 결과 보고 방법)이 적혀 있다',''],
+   ['PC 보안관리(관리자·사용자 지정, 비밀번호 분기별 변경, 화면보호기, 백신, 공유폴더 해제, 보안패치)가 적혀 있다',''],
+   ['외부용역업체 보안관리(보안서약서, 보안교육, 보안확약서, 반출입 보안조치)가 적혀 있다','용역 서류는 해당 시 다음 문서 단계에서 확인'],
+   ['정보시스템 저장매체 불용처리(교체·폐기·수리 반출 시 자료 삭제, 외부 의뢰 시 서약서)가 적혀 있다',''],
+   ['주요 정보통신시설 관리(통제구역 설정, 표찰, 상시출입인가자, 출입통제대장)가 적혀 있다',''],
+   ['시스템·장비별 관리책임자, 상시출입인가자 명단, 기술지원업체 비상연락망이 올해 기준으로 맞다',''],
+   ['정보보안 사고대응(초동조치, 신고 경로)과 업무 담당자 지정표가 최신이다',''],
+   ['3월에 계획을 내부결재로 수립했고 문서번호를 폴더에 기록했다','',true]
+  ],
+  warn:[
+   ['3월 1일자 인사 이동 뒤 담당관, 분임담당관 변경 지정을 다시 결재했다','',0],
+   ['감사 대상 4개 연도 모두 정보보안 종합계획이 있다','연도별 파일은 23_, 24_, 25_, 26_ 접두어로 정리',0]
+  ],
+  ev:['정보보안 종합 계획 공문(첨부파일 포함), 연도별']},
+
+ {id:'d2', part:'정보보안 문서', title:'교육·서약 서류(정보보안, 용역 업체)', cov:'정보보안 2·9',
+  basis:'정보보안 기본지침 제9조, 제26조', when:'연 1회 이상 교육, 용역 계약 시',
+  lead:'교육은 계획, 실시, 결과 보고, 등록부가 한 세트입니다. 하나라도 빠지면 미실시로 봅니다.',
+  todo:[
+   ['교육 계획은 정보보안 종합계획(또는 개인정보 보호 업무 추진계획)에 들어 있다. 대상(전 교직원), 일시, 내용, 방법이 적혀 있다','연수 계획은 기본 계획에 넣고, 결과만 별도로 결재합니다',true],
+   ['연수 결과 보고 내부결재를 올렸다','계획만 있고 결과가 없는 경우가 가장 흔합니다. 등록부와 서약서를 첨부해 올립니다',true],
+   ['연수 등록부에 참석자 서명이 빠짐없이 있다','전입, 신규 교직원 누락 여부'],
+   ['교육 자료를 함께 보관했다',''],
+   ['유지보수 등 용역 업체 보안서약서(대표, 직원)가 있다','해당 업체가 없는 해는 없다고 메모'],
+   ['용역 업체 대상 보안교육 기록이 있다',''],
+   ['제출용 사본에서 개인정보를 비식별 처리했다','주민번호, 연락처, 서명 등']
+  ],
+  warn:[
+   ['감사 대상 4개 연도마다 교육을 한 번도 빠지지 않았다','교육 미실시로 2025년에 2개 학교가 지적받았습니다',2],
+   ['보안서약서 미징구, 보안교육 미실시로 지적받은 사례를 확인했다','2025년에 3개 학교가 지적받았습니다',3]
+  ],
+  ev:['교육 계획, 결과 공문(첨부 포함), 연수 등록부, 교육 자료','보안서약서, 보안교육 복사본(비식별)']},
+
+ {id:'d3', part:'정보보안 문서', title:'사이버보안진단의 날 실시 일지', cov:'정보보안 3·6',
+  basis:'정보보안 기본지침 제10조, 제71·72·74조', when:'매월 세 번째 수요일',
+  lead:'매달 쓰는 일지라서 빠진 달이 없는지가 핵심입니다. 내PC지키미 점검 결과는 별도 서류 없이 교육지원청이 관리자 페이지에서 직접 확인합니다.',
+  use:[['gpi','월 진단의 날 점검 결과(전 PC 안전)를 관리자 페이지에서 확인합니다.']],
+  todo:[
+   ['달마다 사이버보안 진단일지(별지 제33호 서식)를 작성했다','양식 폴더에 실시일지 양식이 있습니다'],
+   ['일지에 점검 대상 PC, 내PC지키미 점검과 조치 결과가 적혀 있다','학교 안 모든 PC(업무용, 공용, 민원인)가 대상'],
+   ['진단 결과를 보안담당관에게 보고하는 내부결재를 했다','일지만 쓰고 보고를 안 하면 지적됩니다'],
+   ['홈페이지 접속기록 월 1회 점검을 같은 보고에 넣었다','개인정보 안전성 확보 조치와 함께 처리됩니다'],
+   ['제출용 샘플 공문 2건을 골라 폴더에 넣었다','공문이 여러 개이면 샘플 2개만 제출'],
+   ['모든 PC가 내PC지키미 점검을 마쳤고 취약 항목이 없다(전부 안전)','제출 서류는 없지만 2차 컨설팅 때 업무용 PC 점검이 있을 수 있습니다'],
+   ['PC마다 부팅 비밀번호가 설정되어 있다','현장 확인 대상']
+  ],
+  warn:[
+   ['달력에서 세 번째 수요일을 확인하며 빠진 달이 없다','결과 보고 미흡으로 3개 학교가 지적받았습니다',3],
+   ['내PC지키미 점검을 누락했거나 점검 후 조치하지 않은 PC가 없다','2025년에 6개 학교가 지적받았습니다',6]
+  ],
+  ev:['진단의 날 결과 보고 공문(첨부 포함), 샘플 2건']},
+
+ {id:'d4', part:'정보보안 문서', title:'재난방지 대책', cov:'정보보안 4',
+  basis:'정보보안 기본지침 제89조', when:'최초 수립 후 정보통신망, 정보시스템 변경 시 재수립',
+  lead:'정전, 화재, 침수 같은 원인으로 정보통신 장애가 났을 때를 대비한 계획입니다. 정보보안 종합계획 안에 있는지, 별도 문서로 있는지 먼저 확인합니다.',
+  todo:[
+   ['재난방지 대책이 내부결재 문서로 따로 있거나 정보보안 종합계획 안에 명확히 포함되어 있다','정보보안 종합계획 본문에 재난방지 항목이 없다면 별도로 수립합니다'],
+   ['관리적 보호대책(책임자, 비상연락망, 복구 절차)이 들어 있다',''],
+   ['물리적 보호대책(서버실 화재, 침수, 전원 대비)이 들어 있다',''],
+   ['기술적 보호대책(백업, 시스템 이중화나 복구 방안)이 들어 있다','정보보안 종합계획의 정기 백업 항목과 맞춰 둡니다'],
+   ['네트워크나 장비가 바뀐 뒤 재수립했다','']
+  ],
+  warn:[['세 가지 보호대책 중 일부가 빠져 지적받은 사례가 있었다','미수립 포함 3개 학교',3]],
+  ev:['재난방지 대책 공문(첨부파일 포함)']},
+
+ {id:'d5', part:'정보보안 문서', title:'통제구역(서버실) 서류 3종', cov:'정보보안 5',
+  basis:'정보보안 기본지침 제84·85조', when:'시설 구축, 구역 관리책임자 변경 시',
+  lead:'표찰, 상시출입인가자 명부, 출입통제대장입니다. 사진 증빙이 필요합니다.',
+  todo:[
+   ['보호구역 설정 내부결재를 했다','구역관리책임자 정, 부를 정해 둡니다'],
+   ['표찰 문구에 구역 이름과 관리책임자가 정확히 적혀 있다','양식 폴더에 표찰 파일이 있습니다'],
+   ['표찰을 출입문에 붙이고 사진을 찍었다',''],
+   ['상시출입인가자 명부가 올해 기준으로 맞고 변경 시 결재가 있다','정보보안 종합계획 안에 명단을 포함해도 됩니다'],
+   ['출입통제대장을 서버실에 비치하고 비치 사진을 찍었다',''],
+   ['출입통제대장 기록면 복사본 샘플을 만들었다','분실에 대비해 경위서 양식도 준비']
+  ],
+  warn:[['표찰 미부착, 인가자 미지정, 출입자 명부 관리 소홀로 지적받은 사례가 있었다','',4]],
+  ev:['보호구역 설정 공문(첨부 포함)','표찰 부착 사진','대장 비치 사진, 복사본 샘플']},
+
+ {id:'d6', part:'정보보안 문서', title:'홈페이지 관리·운영 계획', cov:'정보보안 7',
+  basis:'정보보안 기본지침 제68조, 경기도교육청 학교 홈페이지 운영 가이드', when:'홈페이지 개편, 담당자 변경 시',
+  lead:'비공개 업무자료와 개인정보가 홈페이지에 무단 게시되지 않도록 정한 지침입니다.',
+  link:['게시판 담당자 지정과 권한 현황을 확인합니다. '+'권한 인계가 끝나 있어야 합니다.'],
+  todo:[
+   ['게시자료의 범위(공개, 비공개 기준)가 적혀 있다',''],
+   ['자료 게시 방법과 삭제, 비공개 처리 기준이 적혀 있다',''],
+   ['공개 범위와 권한 관리(관리자, 게시판별 권한)가 적혀 있다',''],
+   ['메뉴(게시판)별 담당자가 지정되어 있다','신규 게시판을 만들었다면 담당자도 같이 지정'],
+   ['인사발령 뒤 담당자를 현행화한 내부결재가 있다','운영 계획에 포함하거나 별도 결재'],
+   ['관리자 페이지에서 담당자 현황이 계획과 일치한다','']
+  ],
+  warn:[['운영 계획 미수립, 메뉴별 담당자 미지정으로 지적받은 사례가 있었다','',6]],
+  ev:['홈페이지 관리·운영 계획 공문(첨부 포함)']},
+
+ {id:'d7', part:'개인정보 문서', title:'개인정보 내부관리계획', cov:'개인정보 1·4',
+  basis:'안전성 확보조치 기준 제4조', when:'법령, 지침 변경 시 개정 · 매년 1회 이상 이행실태 점검(12월 권장)',
+  lead:'개인정보 보호의 기본 문서입니다. 아래 11개 장이 모두 있는지 확인하고, 개정 뒤에는 전 직원에게 공람합니다.',
+  todo:[
+   ['1장 총칙(목적, 적용범위, 용어 정의)이 있다',''],
+   ['2장 내부 관리계획의 수립 및 승인, 공표, 이행 실태 점검 조항이 있다',''],
+   ['3장 개인정보 보호조직(책임자, 분야별 책임자, 담당자, 취급자 역할)이 있고 올해 이름과 직위가 맞다','교장 인사발령 때 책임자 지정을 갱신합니다'],
+   ['4장 개인정보 보호 교육(대상, 내용, 일정, 방법)이 있다',''],
+   ['5장 기술적, 물리적 안전조치(접근권한, 접근통제, 비밀번호, 암호화, 접속기록 보관·점검, 악성프로그램 방지)가 있다',''],
+   ['6장 취약점 점검, 7장 유출 사고 대응(통지, 신고, 대응 절차)이 있다','별표 3, 별지 제2·3호 서식 포함'],
+   ['8장 위험도 분석 및 관리가 있다',''],
+   ['9장 위탁 및 수탁자 관리·감독(위탁 공개, 수탁자 교육, 감독)이 있다',''],
+   ['10장 파기 기준, 절차, 방법이 있고 별표 4, 5와 파기 요청서 서식이 붙어 있다',''],
+   ['11장 목적 외 이용 및 제3자 제공 기준이 있다',''],
+   ['3월에 개정 내부결재를 올렸고 개정 이력, 시행일이 적혀 있다','',true],
+   ['전 직원 공람을 안내했다','공람 안내 공문을 폴더에 보관'],
+   ['매년 1회 이상 이행실태 점검 결과(별지 제1호 서식)를 결재로 남겼다','감사 대상 연도마다 1건']
+  ],
+  warn:[['법령이나 인사발령을 반영해 개정했는지, 제출할 공문이 여러 개이면 샘플 2개를 골랐다','',0]],
+  ev:['개인정보 내부 관리계획 개정 공문(첨부 포함)','이행실태 점검 공문']},
+
+ {id:'d8', part:'개인정보 문서', title:'개인정보 보호업무 추진계획', cov:'개인정보 2',
+  basis:'개인정보 보호법 제31조', when:'학년 초(3월)',
+  lead:'개인정보 보호책임자가 해마다 세우는 연간 계획입니다. 교육 계획이 함께 들어 있어야 합니다.',
+  todo:[
+   ['목적과 추진체계가 적혀 있다',''],
+   ['추진 일정에 교육, 개인정보 내부 관리계획 개정, 동의서 서식 검토, 개인정보 처리방침 개정, 파일 일제정비가 올해 날짜로 들어 있다',''],
+   ['교육 계획이 이 개인정보 보호 업무 추진계획 안에 대상별(전 직원, 신규·전입자, 위탁 업체) 시기와 방법, 내용으로 들어 있다','계약직 포함. 연수 계획 공문을 따로 만들지 않아도 됩니다',true],
+   ['홈페이지 접속기록과 게시판 개인정보 노출 점검(매월)이 들어 있다',''],
+   ['위·수탁 관리·감독, 개인정보 파기, 이행 실태 점검, 유출 대응 항목이 들어 있다',''],
+   ['3월에 내부결재로 수립했다','',true],
+   ['교육을 실시한 뒤 연수 결과 내부결재를 올렸고 등록부(서명)를 첨부했다','정보보안 교육과 같은 날 했어도 개인정보 교육 결과로 구분해 기재',true]
+  ],
+  warn:[],
+  ev:['개인정보 보호 업무 추진계획 공문(첨부 포함)','교육 결과 공문, 등록부']},
+
+ {id:'d9', part:'개인정보 문서', title:'개인정보 처리방침', cov:'개인정보 3·4',
+  basis:'개인정보 보호법 제30조', when:'내용 변동 시(법령·지침 변경, 인사발령)',
+  lead:'정보주체가 홈페이지에서 쉽게 볼 수 있어야 하는 공개 문서입니다. 올해 방침의 12개 항목이 모두 있는지 봅니다.',
+  link:['공개된 방침과 변경 이력을 확인합니다. '+HL],
+  todo:[
+   ['처리 목적, 보유기간, 개인정보파일 등록 현황이 있다','종합지원시스템의 파일 목록과 같아야 합니다'],
+   ['만 14세 미만 아동의 개인정보 처리에 관한 사항이 있다',''],
+   ['파기 절차와 방법이 있다',''],
+   ['제3자 제공, 추가적인 이용·제공 판단기준이 있다',''],
+   ['개인정보 처리 위탁(업무, 수탁자)이 있고 실제 위탁과 일치한다',''],
+   ['안전성 확보 조치(관리적, 기술적, 물리적)가 있다',''],
+   ['자동 수집 장치의 설치·운영 및 거부에 관한 사항이 있다',''],
+   ['정보주체와 법정대리인의 권리·의무와 행사 방법이 있다',''],
+   ['개인정보 보호책임자와 분야별 책임자가 올해 인사 기준으로 맞다','교장이 바뀌면 이 부분을 수정해 공개'],
+   ['권익침해 구제방법(분쟁조정위원회, 침해신고센터 등)이 있다',''],
+   ['방침의 변경 이력과 시행일이 있다','변경 전, 후를 비교할 수 있게 공개'],
+   ['3월에 개정 내부결재를 올린 뒤 홈페이지에 공개했다','',true],
+   ['종합지원시스템의 개인정보파일 목록과 방침의 파일 목록을 나란히 놓고 비교했다','일제정비 결과를 방침에 반영']
+  ],
+  warn:[['두 목록이 달라 지적받은 사례가 있었다. 교육지원청이 홈페이지에서 직접 비교한다','',4]],
+  ev:['개인정보 처리방침 개정 공문(첨부 포함)']},
+
+ {id:'d10', part:'개인정보 문서', title:'동의서 서식(수집, 이용, 제3자 제공)', cov:'개인정보 7·8',
+  basis:'개인정보 보호법 제15·16·17·18·22조', when:'학년도 초, 수집할 때마다',
+  lead:'실제로 받은 동의서 샘플 2건(일괄동의서 포함)을 비식별 처리해 수집용과 제공용으로 각각 냅니다. 서식이 법 요건을 갖췄는지가 핵심입니다.',
+  todo:[
+   ['수집·이용 목적이 구체적으로 적혀 있다',''],
+   ['수집 항목이 하나씩 명시되어 있다','"등"처럼 뭉뚱그리면 지적됩니다'],
+   ['보유·이용 기간이 명시되어 있다',''],
+   ['동의를 거부할 권리와 거부 시 불이익이 적혀 있다',''],
+   ['만 14세 미만은 법정대리인(보호자) 동의란이 있다','법정대리인 연락을 위한 최소 정보(성명, 연락처)는 동의 없이 수집 가능'],
+   ['민감정보, 고유식별정보, 제3자 제공은 별도 동의란이 따로 있다',''],
+   ['제3자 제공 동의서에 제공받는 자, 이용 목적, 제공 항목, 보유 기간이 모두 있다',''],
+   ['목적 외 이용이나 제3자 제공을 했다면 홈페이지에 게재했다','해당 사례가 없으면 없다고 확인'],
+   ['샘플 2건을 골라 이름, 연락처, 서명을 가렸다','']
+  ],
+  warn:[['항목, 이용 기간이 포괄적이거나 별도 동의 표시가 빠진 서식으로 지적받은 사례가 있었다','',2]],
+  ev:['수집·이용 동의서 샘플 2건(비식별)','제3자 제공 동의서 샘플 2건(비식별)']},
+
+ {id:'d11', part:'개인정보 문서', title:'위탁 서류 세트', cov:'개인정보 9',
+  basis:'개인정보 보호법 제26조, 시행령 제28조', when:'위탁 업무가 있을 때',
+  lead:'업무마다 계약서, 서약서, 교육, 점검, 파기 확인이 한 세트입니다. 위탁 사항은 홈페이지에도 게시합니다.',
+  link:['위탁 업무 내용과 수탁자가 게시되어 있는지 확인합니다. '+HL],
+  todo:[
+   ['위탁 업무 목록(업무, 수탁자)을 만들었다','늘봄 출결 시스템 등'],
+   ['업무마다 표준 위탁계약서가 있고 필수 사항이 들어 있다',''],
+   ['수탁자 서약서가 있다',''],
+   ['수탁자 교육 자료와 연수 등록부가 있다',''],
+   ['수탁자 안전성 확보조치 현황 점검표와 관리·감독 결과 보고가 있다',''],
+   ['위탁이 끝난 업무는 자료 파기 확인서가 있다',''],
+   ['홈페이지에 위탁 업무 내용과 수탁자를 게시했다','교육지원청이 직접 확인'],
+   ['개인정보 처리방침의 위탁 항목과 실제 위탁이 같다','']
+  ],
+  warn:[['위탁 자료 미제출, 계약서·서약서·교육 중 하나 누락으로 지적받은 사례가 있었다','',5]],
+  ev:['업무별 계약서, 서약서, 교육, 점검, 파기확인서']},
+
+ {id:'d12', part:'개인정보 문서', title:'서약서와 파기·파일정비 서류', cov:'개인정보 5·10',
+  basis:'개인정보 보호법 제21·28조', when:'학기 초와 전입 시 · 파기는 사안 발생 시',
+  lead:'취급자 서약서와 개인정보 파기 기록입니다. 서약서는 실제로 받은 복사본 샘플 2건을 냅니다.',
+  use:[['ppo','개인정보파일 등록 현황과 파기 등재 내역을 확인합니다.']],
+  todo:[
+   ['학기 초에 전 직원 개인정보 보호 서약서를 받았다',''],
+   ['중간 전입 교직원과 계약직(늘봄 인력 등) 서약서도 받았다',''],
+   ['서약서 샘플 2건을 골라 개인정보를 가렸다',''],
+   ['개인정보 파일을 파기한 사례가 있는지 확인했다','없으면 해당 없음'],
+   ['파일 파기 시 파기 요청서, 파기 관리대장, 종합지원시스템 등재 내역 삭제를 했다','일부 파기는 파기 공문 내부결재'],
+   ['매년 개인정보파일 일제정비 결과 공문이 있다','개인정보 처리방침에 반영된 것까지 확인']
+  ],
+  warn:[],
+  ev:['서약서 복사본 샘플 2건','파기 또는 일부삭제 공문(첨부 포함)']},
+
+ {id:'d13', part:'개인정보 문서', title:'안전성 확보 조치 증빙(접근권한, 접속기록, PC 암호화)', cov:'개인정보 6',
+  basis:'안전성 확보조치 기준 제5·7·8조', when:'접속기록 매월 · PC 점검 상시',
+  lead:'이 항목은 문서보다 실제 점검 기록입니다. 세 가지를 확인합니다.',
+  link:['접근 권한 부여 현황과 접속기록을 확인합니다. '+HL],
+  todo:[
+   ['개인정보처리시스템(홈페이지) 접근 권한이 업무에 맞게 차등 부여되어 있다','담당자가 바뀔 때마다 변경 결재'],
+   ['접속기록을 매월 점검하고 개인정보 내부 관리계획 별표 2 양식에 결과를 남겼다','진단의 날 보고에 포함 가능'],
+   ['업무용 PC마다 Privacy-i로 개인정보 파일을 점검했다','제출 서류는 없고 관리자 페이지로 확인'],
+   ['보유 권한이 없는 개인정보 파일은 삭제하고 필요한 파일은 암호화했다','2026.6.22. 행정과-17035 조치 결과 제출 건과 연결']
+  ],
+  warn:[
+   ['홈페이지 접속기록을 월 1회 점검하지 않은 달이 없다','2025년에 3개 학교가 지적받았습니다',3],
+   ['Privacy-i 점검과 암호화 조치를 하지 않은 PC가 없다','2025년에 6개 학교가 지적받았습니다',6]
+  ],
+  ev:['접근권한, 접속기록 점검 공문(첨부 포함)']},
+
+ {id:'d14', part:'개인정보 문서', title:'영상정보처리기기 운영·관리 방침과 개인정보 내부 관리계획', cov:'개인정보 11',
+  basis:'개인정보 보호법 제25조, 시행령 제22~26조', when:'계획은 수립·개정 시, 관리대장은 달마다',
+  lead:'문서 세 가지입니다. 운영·관리 방침(공개용), 개인영상정보 내부 관리계획, 개인영상정보 관리대장입니다.',
+  link:['공개된 영상정보처리기기 운영·관리 방침이 최신인지 확인합니다. '+HL],
+  todo:[
+   ['방침에 설치 근거와 목적이 있다',''],
+   ['설치 대수, 위치, 촬영 범위가 현재 CCTV 현황과 같다','대수나 위치가 바뀌었는데 방침이 그대로인지 확인'],
+   ['관리책임자와 접근권한자, 연락처가 올해 기준이다',''],
+   ['촬영 시간, 보관 기간, 보관 장소, 처리 방법이 있다',''],
+   ['영상 확인 방법과 장소, 정보주체의 열람 요구 조치가 있다',''],
+   ['기술적, 관리적, 물리적 보호 조치와 그 밖의 필요 사항이 있다',''],
+   ['방침을 홈페이지에 최신본으로 공개했다',''],
+   ['개인영상정보 내부 관리계획이 있다','개인정보 내부관리계획에 포함해도 인정됩니다'],
+   ['개인정보 내부 관리계획에 관리책임자, 안내판, 이용·제공 제한, 보관 및 파기, 기록·관리, 열람 절차, 안전성 확보 조치가 들어 있다',''],
+   ['개인영상정보 관리대장에 이용, 제공, 열람, 파기를 기록했다','감사 대상 기간 전체'],
+   ['보관 기간이 지난 영상의 자동 파기 여부를 달마다 확인해 대장에 적었다','대장 기록을 스캔해 제출']
+  ],
+  warn:[['방침을 공개하지 않았거나 개인정보 내부 관리계획이 없거나 달마다 파기 현황을 기록하지 않아 지적받은 사례가 있었다','',6]],
+  ev:['공문(방침, 개인정보 내부 관리계획)','개인영상정보 관리대장(기록 스캔)']},
+
+ {id:'z', part:'마무리', title:'수감자료와 점검표 제출', cov:'공통',
+  basis:'감사 계획 4. 감사자료 제출', when:'제출 기한 전',
+  lead:'앞에서 점검한 문서와 증빙으로 두 서식을 채우고 제출합니다. 수감자료는 감사 대상 기간 전체를 적습니다.',
+  todo:[
+   ['수감자료(일반현황)를 감사 대상 기간 전체로 작성했다',''],
+   ['자체점검표에서 항목마다 시행 여부 O/X를 적었다','X로 남는 항목은 사유를 비고에 적습니다'],
+   ['실적 증빙 칸에 문서번호, 문서명, 사진 파일명을 적었다','이 칸에 적은 공문은 시행문으로 내려받아 증빙으로 냅니다'],
+   ['증빙 파일의 개인정보를 모두 비식별 처리했다',''],
+   ['증빙은 압축해 지정 공유 폴더에 올렸다','공유 폴더 이름과 학교명 확인'],
+   ['수감자료와 점검표를 업무관리시스템으로 제출했다','']
+  ],
+  warn:[['제출 뒤 컨설팅(유선, 방문)에서 업무용 PC 점검과 현장 확인이 있을 수 있어 PC 상태를 한 번 더 봤다','경미한 지적은 현지 시정, 중대한 사항은 행정 조치 대상입니다',0]],
+  ev:[]}
+];
+
+
+var SITES=[
+ {id:'home',name:'학교 홈페이지 관리자',use:'개인정보 처리방침, 영상정보처리기기 운영·관리 방침, 위탁 사항 게시, 게시판 담당자와 권한, 접속기록',url:'https://websupport.goeyp.kr/apple/main.do',todo:'월 1회 접속기록 점검, 게시판 개인정보 노출 점검'},
+ {id:'gpi',name:'내PC지키미(GPI) 관리자 페이지',use:'전 PC 보안 점검 결과, IP 대장',todo:'매월 진단의 날에 점검 누락 PC와 취약 PC 확인'},
+ {id:'privacyi',name:'Privacy-i(개인정보 보호솔루션)',use:'업무용 PC 개인정보 파일 검출, 삭제, 암호화',todo:'연 1회 이상 전 PC 점검과 조치 결과 제출'},
+ {id:'ppo',name:'개인정보보호 종합지원시스템(종합포털)',use:'개인정보파일 등록, 일제정비, 파기 시 등재 삭제',todo:'일제정비 후 개인정보 처리방침의 파일 목록과 일치 확인'},
+];
+/* ---------- 항목별 자세한 설명. 키 = 단계id.t번호. [소제목, 내용(문장 또는 문장 배열)] ---------- */
+var DET = {
+ 'm6.t3':[
+  ['무슨 일','학교 네트워크가 어떻게 연결되어 있는지 그린 그림(네트워크 구성도)과 장비마다 어떤 IP 주소를 쓰는지 적은 표(IP 현황)를 비공개로 관리하는 일입니다. 외부에 알려지면 해킹에 이용될 수 있어 홈페이지나 단체 메신저에 올리면 안 됩니다.'],
+  ['순서',['구성도와 IP 현황 파일이 어디에 있는지 찾습니다(학교 PC 폴더, 유지보수 업체, 교육지원청 중 어디인지).','누가 관리하는지 확인합니다. 보통 네트워크 장비 유지보수 업체가 갖고 있고, 학교는 사본을 받아 보관합니다. 정보보안 종합계획에는 (주)인컴에스엔(031-773-2711)이 네트워크 장비 기술지원 업체로 적혀 있습니다.','업체나 교육지원청에서 최신본을 받습니다. 장비를 바꾸거나 배선을 고쳤다면 새로 받아야 합니다.','외부에서 접근할 수 없는 곳(잠금 있는 PC, 서버실 보관함)에 둡니다.','월간 보고서 현행화 항목에 보관 위치와 관리 업체를 적습니다.']],
+  ['남길 것','보관 위치, 관리 업체와 담당자 연락처, 받은 날짜']
+ ],
+ 'm6.t4':[
+  ['무슨 일','누가 시스템(서버, 홈페이지, 네트워크 장비 등)에 언제 접속했는지 남는 기록(접근 로그)을 1년 이상 지우지 않고 보관하는 일입니다. 문제가 생기면 이 기록으로 원인을 찾습니다.'],
+  ['순서',['로그가 어느 장비에 남는지 확인합니다(홈페이지는 관리자 페이지의 접속기록, 네트워크 장비는 유지보수 업체 관리).','누가 관리하는지 확인합니다. 보통 해당 시스템의 유지보수 업체가 보관 설정을 합니다.','보관 기간이 1년 이상으로 되어 있는지 업체에 물어 확인합니다.','설정 정보와 저장 자료의 정기 백업 여부도 같이 확인합니다.','홈페이지 접속기록은 매달 월간 보고서의 "접속기록 점검"으로 남깁니다.']],
+  ['남길 것','로그 보관 위치와 보관 기간, 관리 업체 확인 내용']
+ ],
+ 'plan.t0':[
+  ['무슨 일','3월에 교육청에서 새 매뉴얼과 지침이 오면, 지난해 문서와 비교해서 달라진 점을 찾는 일입니다. 달라진 점이 있으면 아래 문서 6개를 고칠 때 같이 반영합니다.'],
+  ['대조할 교육청 문서',[
+   '정보보안 업무 매뉴얼(경기도교육청, 올해 것: 행정과-9356 붙임1)',
+   '개인정보 보호업무 매뉴얼(올해 것: 행정과-9356 붙임2)',
+   '각급학교 개인정보 수집업무 길잡이(올해 것: 행정과-23026 붙임1)',
+   '학교 보안감사·컨설팅 추진 계획과 자체점검표(교육지원청 공문 붙임)'
+  ]],
+  ['순서',[
+   '새 문서가 오면 파일을 새 학년도 폴더에 저장합니다.',
+   '문서 앞부분의 "개정 사항", "주요 변경 내용"부터 봅니다. 없으면 목차를 지난해 것과 나란히 놓고 달라진 제목을 찾습니다.',
+   '달라진 점을 메모합니다(어느 문서의 어느 부분이 바뀌었는지).',
+   '메모를 보며 문서 6개의 해당 부분을 고칩니다.',
+   '자체점검표의 항목이 바뀌었으면, 이 매뉴얼의 점검 항목도 같이 바꿉니다.'
+  ]],
+  ['꼭 볼 것','담당자 지정 기준, 연수 횟수와 대상, 점검 주기와 제출 기한, 새로 생긴 서식, 개정된 법령 조항'],
+  ['남길 것','대조 메모 한 장(바뀐 점과 반영한 문서). 감사에서 "개정 내용을 반영했는가"를 물으면 이것으로 답합니다.']
+ ],
+ 'plan.t1':[
+  ['작성할 문서 6개와 고칠 것',[
+   '① 정보보안 종합계획: 담당자 이름(정보보안담당관, 부서별 관리자, 상시출입인가자, 장비 관리책임자), 학년도·날짜, 연수 시기와 대상을 넣기',
+   '② 개인정보 보호업무 추진계획: 월별 일정을 올해 날짜로, 교육 계획 확인',
+   '③ 개인정보 내부관리계획: 책임자·담당자·취급자 이름, 개정 이력, 시행일',
+   '④ 개인정보 처리방침: 책임자·담당자·연락처, 개인정보파일 목록, 시행일. 홈페이지 게시본도 교체',
+   '⑤ 개인영상정보 내부 관리계획(CCTV): 학년도, 관리책임자(우리 학교는 행정실장), 시행일',
+   '⑥ 영상정보처리기기 운영·관리 방침: 관리책임자와 접근권한자(교감, 안전담당, 정보담당), 연락처, 설치 대수와 위치, 보관기간(30일), 보관장소. 바뀌면 홈페이지에 다시 게시'
+  ]],
+  ['순서','지난해 파일을 새 학년도 폴더로 복사 → 위 항목만 올해 기준으로 고침 → 파일 이름 앞에 연도를 붙임'],
+  ['놓치기 쉬운 것','영상정보처리기기 운영·관리 방침의 설치 대수와 위치가 지금 실제와 같은지 확인하세요. 개인영상정보 내부 관리계획 제18조에 따라 CCTV 자체점검 결과를 3월 31일까지 관리책임자에게 내고, 개인정보보호 종합지원시스템에 등록하고, 홈페이지에 공개해야 합니다.']
+ ],
+ 'plan.t2':[
+  ['어떻게','문서별로 올려도 되고, 한 건에 붙임으로 묶어도 됩니다. 정보보안 종합계획, 개인정보 내부 관리계획, 개인정보 처리방침, 개인정보 보호 업무 추진계획을 한 건에 붙임으로 묶어 올리는 것이 간단합니다.'],
+  ['CCTV 문서','개인영상정보 내부 관리계획과 영상정보처리기기 운영·관리 방침은 따로 결재해도 되고, 위 문서와 같이 묶어도 됩니다.'],
+  ['확인','정보보안 종합계획 안에 연수 시기와 대상이 적혀 있는지 보고 올립니다.']
+ ],
+ 'plan.t3':[
+  ['무슨 일','3월에 고친 개인정보 처리방침과 영상정보처리기기 운영·관리 방침 내용을 홈페이지 관리자 창에서 똑같이 고쳐 저장하는 일입니다. 홈페이지 맨 아래의 "개인정보처리방침", "영상정보처리기기운영방침" 두 메뉴가 그 페이지입니다.'],
+  ['순서',[
+   '위의 "홈페이지 열기" 버튼으로 관리자 창에 들어갑니다.',
+   '두 메뉴의 내용 입력 화면을 엽니다.',
+   '결재받은 새 문서 내용으로 바꿔 저장합니다(담당자, 연락처, 시행일, CCTV 대수와 보관기간).',
+   '홈페이지 맨 아래 링크를 눌러 바뀐 내용이 보이는지 확인합니다.',
+   '확인한 화면을 캡처해 증빙 폴더에 저장합니다.'
+  ]],
+  ['참고','방침 내용을 바꿨다면 홈페이지에 게시한다는 내부결재도 함께 올립니다.']
+ ],
+ 'plan.t4':[
+  ['무슨 일','학교 개인정보를 맡아 처리하는 업체(예: 늘봄 프로그램 출결 시스템 업체)가 안전하게 관리하고 있는지 학교가 확인하는 일입니다. 위탁 계약을 맡은 행정실에서 진행합니다.'],
+  ['누가','행정실 담당자가 업체 교육, 서약서, 점검을 진행합니다(보안서약서, 교육 확인서 등). 정보부는 양식(아래 교육 자료)과 점검 결과 취합을 돕습니다.'],
+  ['순서',['업체에 수탁자 점검 자료를 받습니다(점검표, 업체의 안전조치 내용).','업체 담당자에게 교육 자료로 교육하고 서명을 받습니다(보안서약서, 교육 확인서 등).','학교 자체 점검표에 양호, 개선필요를 체크합니다.','사진이나 PDF로 올리고 결과를 결재합니다.']],
+  ['남길 것','수탁자 점검표, 서명받은 교육 자료(보안서약서, 교육 확인서 등), 관리·감독 결과 보고 결재(업체 점검일을 적어 둡니다)']
+ ],
+ 'plan.t5':[
+  ['무슨 일','교직원과 업체 직원이 "개인정보와 보안을 지키겠습니다"라고 서명한 서약서를 모으는 일입니다.'],
+  ['순서',['서약서 양식을 인쇄합니다(지난해 파일을 쓰면 됩니다).','교직원, 유지보수 업체 직원에게 서명을 받습니다.','사진을 찍거나 스캔해서 이 항목 아래에서 올립니다.']],
+  ['남길 것','서명받은 서약서(교직원, 유지보수 업체)와 서약서 등록부']
+ ],
+ 'plan.t6':[
+  ['무슨 일','교직원 전체, 신규·전입자, 위탁 업체에 정보보안과 개인정보 보호 교육을 하는 일입니다.'],
+  ['준비물','교육 자료, 참석자 서명을 받을 연수 등록부, 서약서'],
+  ['순서','교육 → 등록부에 서명 → 서약서 받기. 업체 직원 교육은 업체에서 한 등록부를 따로 받습니다.']
+ ],
+ 'plan.t7':[
+  ['무슨 일','연수를 한 뒤 "했습니다"라고 보고하는 결재입니다.'],
+  ['순서','결재 문서에 등록부, 서약서, 교육 자료를 첨부해서 올립니다.'],
+  ['남길 것','결재 문서, 연수 등록부, 서약서, 교육 자료']
+ ],
+ 'yr.t0':[
+  ['무슨 일','학교가 가진 개인정보 명단(학생부, 학부모 신청자 명단 등)이 시스템 등록 내용과 같은지 맞추는 일입니다.'],
+  ['순서',['교육지원청 공문이 오면 기간을 확인합니다(보통 5~6월).','결재로 "정비하겠습니다"를 올립니다.','기간 안에 개인정보보호 종합지원시스템에서 새 명단 추가, 바뀐 것 수정, 안 쓰는 것 삭제를 합니다.','끝나면 결과 결재를 올립니다.','개인정보 처리방침의 파일 목록도 같게 고칩니다.']],
+  ['남길 것','계획 결재, 결과 결재. 공문에 나온 기간과 날짜를 적어 올립니다.']
+ ],
+ 'yr.t1':[
+  ['무슨 일','매달 세 번째 수요일에 교직원 PC를 내PC지키미로 점검하고 결과를 결재받는 일입니다.'],
+  ['순서',['그날 교직원에게 내PC지키미 100점 확인을 안내합니다.','점검 결과를 정리합니다.','월간 보고서 메뉴로 표를 만들어 결재를 올립니다.']],
+  ['남길 것','달마다 결재 1건(12개월 빠짐없이)']
+ ],
+ 'yr.t2':[
+  ['무슨 일','정보 업무 담당자가 누구인지 교육지원청에 알리는 조사입니다.'],
+  ['순서',['3월 1일, 9월 1일 기준 공문이 옵니다.','붙은 엑셀 서식에 담당자를 적습니다.','결재 후 회신합니다.']],
+  ['남길 것','회신한 서식과 결재']
+ ],
+ 'yr.t3':[
+  ['무슨 일','교직원 PC에 주민번호 같은 개인정보 파일이 남아 있지 않은지 검사하고 결과를 내는 일입니다.'],
+  ['순서',['공문이 오면 제출 기간을 확인합니다.','교직원에게 Privacy-i 개인정보 검사를 안내합니다.','필요 없는 파일은 삭제하고, 남겨야 하면 암호화합니다.','데이터취합 시스템에 입력하고, 제출 승인 결재를 올립니다.']],
+  ['남길 것','제출 승인 결재, 취합 결과 출력물. 마감일 전에 끝내세요.']
+ ],
+ 'yr.t4':[
+  ['무슨 일','개인정보 안전조치를 잘 하고 있는지 학교가 스스로 점검해 내는 체크리스트입니다. 공문이 오는 해에만 합니다.'],
+  ['순서',['공문이 오면 첨부된 체크리스트를 엽니다.','Privacy-i 리포트의 숫자와 시스템 목록을 적습니다.','결재 후 회신합니다.']],
+  ['남길 것','결재 + 작성한 체크리스트']
+ ],
+ 'yr.t5':[
+  ['무슨 일','개인정보 내부 관리계획대로 1년 동안 했는지 12월에 스스로 점검해 보고하는 일입니다.'],
+  ['순서',['개인정보 내부 관리계획 이행실태 점검표를 엽니다.','항목마다 했는지 체크합니다.','결재를 올립니다. 3월에 올린 계획 결재를 "관련"으로 겁니다.']],
+  ['남길 것','결재 + 점검표']
+ ]
+};
+/* ---------- 정보부장 업무매뉴얼(일반 업무). 4번째 값 true = 감사 증빙으로 쓰이는 항목 ---------- */
+var MAN = [
+ {id:'plan', part:'시작', title:'3월에 할 일', gt:'3월 할 일',
+  basis:'정보보안 종합 계획, 개인정보 보호업무 추진계획, 개인영상정보 내부 관리계획', when:'3월',
+  lead:'3월에는 문서를 고쳐서 결재받고, 연수를 하고, 연수 결과를 결재받으면 끝입니다. 연수 계획은 따로 공문을 만들지 않고 정보보안 종합계획 안에 넣습니다.',
+  todo:[
+   ['교육청에서 온 새 문서(매뉴얼, 지침, 점검표)와 지난해 내용을 대조한다','달라진 점을 메모하고, 아래 문서를 고칠 때 반영합니다',true,true],
+   ['3월 계획 문서 6개를 한꺼번에 작성한다','① 2026학년도 수입초등학교 정보보안 종합 계획 ② 2026학년도 수입초등학교 개인정보 보호 업무 추진계획 ③ 2026학년도 수입초등학교 개인정보 내부 관리계획 ④ 2026학년도 수입초등학교 개인정보 처리방침 ⑤ 2026 수입초등학교 개인영상정보 내부 관리계획 ⑥ 수입초등학교 영상정보처리기기 운영·관리 방침(홈페이지 게시용). 대조 메모를 보며 바뀐 것을 고칩니다(연도는 해당 학년도로)',true,true],
+   ['고친 문서를 내부결재로 올린다','3월 안에 올립니다. 정보보안 종합계획 안에 연수 계획(시기, 대상)이 들어 있어야 합니다',true,true],
+   ['홈페이지에 개인정보 처리방침과 영상정보처리기기 운영·관리 방침 내용을 새로 고친다','관리자 창에서 두 메뉴의 내용을 새 문서와 같게 바꾸고 화면을 캡처해 둡니다',true,true],
+   ['위탁업체(수탁자) 개인정보 처리 점검 자료를 올린다','행정실에서 하는 일입니다. 수탁자 점검표와 업체 교육 자료(보안서약서, 교육 확인서 등)를 사진이나 PDF로 올립니다',false,true],
+   ['보안서약서를 받아서 올린다','교직원, 유지보수 업체 서약서를 사진이나 PDF로 올립니다',true,true],
+   ['연수를 실시한다','교직원 전체, 신규·전입자, 위탁 업체',false,true],
+   ['연수 결과 내부결재를 올린다','등록부, 서약서, 교육 자료를 첨부합니다',true,true]
+  ],
+  use:[['home','개인정보처리방침, 영상정보처리기기운영방침 메뉴의 내용을 고칩니다']],
+  warn:[], ev:[]},
+
+ {id:'yr', part:'시작', title:'연중에 챙길 일 (공문이 오면)', gt:'올해 챙길 일',
+  basis:'교육지원청 공문, 정보보안 기본지침', when:'월별, 공문 접수 때',
+  lead:'3월 일이 끝나면 아래를 해당 시기에 하나씩 합니다. 공문이 와야 하는 일은 공문이 오면 합니다.',
+  todo:[
+   ['개인정보파일 일제정비를 한다','교육지원청 공문으로 기간이 정해집니다. 결과를 개인정보 처리방침의 파일 목록에 반영합니다',false,true],
+   ['매월 세 번째 수요일에 사이버보안진단을 하고, 결재는 다음 달 첫째 주에 올린다 (월간 보고서 작성!)','진단은 그달 세 번째 수요일에 하고, 결과 보고(결재)는 다음 달 첫째 주에 한 번에 올립니다. 월간 보고서 메뉴에서 점검 결과를 적고 작성합니다',true,true],
+   ['3월 1일, 9월 1일 기준 정보화업무 담당자 현황 조사 공문에 회신한다','정보화업무 담당자(정보부장, 담당자 등)의 이름과 업무를 공문 양식에 적어 회신합니다',false,false],
+   ['Privacy-i 점검 후 업무용 PC 개인정보 삭제·암호화 조치 결과를 제출한다 (월간 보고서 작성!)','Privacy-i로 업무용 PC의 개인정보 파일을 검출해 지우거나 암호화한 결과를 교육지원청 공문에 따라 제출합니다. 점검 결과는 월간 보고서에도 적습니다',false,true],
+   ['개인정보 안전성 확보조치 체크리스트 공문이 오면 회신한다','공문으로 온 체크리스트에 학교의 안전조치 현황을 적어 회신합니다',false,true],
+   ['12월에 개인정보 내부관리계획 이행실태 점검 결과를 결재한다','연 1회 이상, 12월 권장',true,true]
+  ],
+  warn:[], ev:[]},
+
+ {id:'m1', part:'연간 업무', title:'학년 초(3월) 계획 문서 작성', gt:'업무 따라하기',
+  basis:'정보보안 기본지침, 개인정보 보호법 제31조', when:'3월',
+  lead:'새 학년도 첫 업무입니다. 지난해 문서를 복사해 바뀐 부분만 고치되, 사람 이름과 날짜가 올해 기준인지 꼭 확인합니다.',
+  todo:[
+   ['지난해 정보보안 종합 계획, 개인정보 보호 업무 추진계획, 개인정보 내부 관리계획, 개인정보 처리방침 파일을 새 학년도 폴더로 복사했다','영상 쪽 두 문서(개인영상정보 내부 관리계획, 영상정보처리기기 운영·관리 방침)도 같이 복사합니다. 파일 이름 앞에 연도를 붙입니다(26_, 27_ 등)'],
+   ['정보보안 종합계획에 정보보안담당관, 부서별 관리자, 상시출입인가자, 장비 관리책임자를 올해 이름으로 고쳤다','담당자가 이전 이름으로 남아 있으면 지적됩니다',false,true],
+   ['정보보안 종합계획에 교육 시기와 대상(전 교직원, 신규·전입자, 위탁 업체)을 넣었다','연수 계획 공문을 따로 만들지 않습니다',true,true],
+   ['정보보안 종합계획에 진단의 날, PC 보안, 자료 보안, 용역 업체, 불용처리, 통제구역, 사고 대응 항목이 있다','지난해 항목이 빠지지 않았는지 확인',false,true],
+   ['정보보안 종합계획에 재난방지 대책이 포함되어 있거나 별도 문서가 있다','관리적, 물리적, 기술적 대책을 모두 담습니다',false,true],
+   ['개인정보 보호 업무 추진계획에 월별 일정(일제정비, 동의서 검토, 접속기록 점검, 위탁 점검, 파기, 이행점검)을 올해 날짜로 넣었다','',false,true],
+   ['개인정보 내부 관리계획에서 책임자, 담당자, 취급자 이름과 개정 이력, 시행일을 고쳤다','법령, 지침이 바뀌었다면 해당 조항도 반영',true,true],
+   ['개인정보 처리방침에서 책임자, 파일 목록, 위탁 현황을 고치고 변경 이력을 남겼다','',true,true],
+   ['계획 문서 네 가지를 3월 안에 내부결재로 올리고 문서번호를 기록했다','',true,true],
+   ['전 직원 공람을 안내했다','']
+  ],
+  warn:[], ev:[], evt:'감사 때 제출하는 문서', use:[['home','개정한 개인정보 처리방침을 공개합니다.']]},
+
+ {id:'m2', part:'연간 업무', title:'인사 이동·담당자 변경 때', gt:'업무 따라하기',
+  basis:'정보보안 기본지침 제5조, 개인정보 보호법 제31조', when:'3월 인사 이동 직후, 수시',
+  lead:'담당자나 관리자가 바뀔 때마다 지정 결재와 권한 변경이 필요합니다. 한 번에 몰아서 처리하면 빠뜨리지 않습니다.',
+  todo:[
+   ['정보보안담당관, 분임정보보안담당관 변경 지정을 내부결재했다','',false,true],
+   ['교장이 바뀌었다면 개인정보 보호책임자 지정 결재와 전 직원 공람을 했다','개인정보 처리방침의 책임자 항목도 고쳐 공개',false,true],
+   ['통제구역 구역관리책임자(정, 부)가 바뀌었다면 표찰을 새로 만들어 붙였다','양식 폴더의 표찰 파일 사용',false,true],
+   ['상시출입인가자 명단이 바뀌었다면 결재했다','',false,true],
+   ['홈페이지 게시판 담당자와 관리자 권한을 바꿨다','권한 변경 결재 포함',false,true],
+   ['내PC지키미, Privacy-i, 종합지원시스템, 업무관리시스템 담당자 권한을 바꿨다','',false,false],
+   ['신규 전입 교직원과 계약직에게 개인정보 보호·정보보안 서약서를 받았다','',false,true],
+   ['전출자의 계정과 권한을 정리했다','']
+  ],
+  warn:[], ev:[], evt:'감사 때 제출하는 문서'},
+
+ {id:'m3', part:'연간 업무', title:'연수 운영(정보보안, 개인정보보호, 정보통신윤리)', gt:'업무 따라하기',
+  basis:'정보보안 기본지침 제9조, 교육부 개인정보 보호지침 제32조', when:'연 1회 이상, 학교 계획에 따라',
+  lead:'계획은 3월 기본 계획에 있고, 연수를 하면 결과 결재와 등록부로 마무리합니다.',
+  todo:[
+   ['연수 일시와 방법(집합, 원격)을 정하고 안내 공문을 보냈다','교육 자료는 지난해 것을 고쳐 씁니다'],
+   ['연수 자료에 올해 법령 변경과 학교 실제 사례를 반영했다',''],
+   ['연수 때 등록부에 서명을 받았다','전입자, 계약직, 위탁 업체 포함',false,true],
+   ['개인정보 보호 서약서도 같은 날 받았다','',false,true],
+   ['연수 결과 내부결재를 올렸다','등록부, 서약서, 자료 첨부',true,true],
+   ['불참자를 파악해 따로 안내했다','전입 교직원은 전입 때 교육'],
+   ['정보통신윤리교육 계획과 연수 결과를 올렸다','자체평가 공문이 오면 통계표를 작성해 제출',false,true]
+  ],
+  warn:[['감사 대상 4개 연도마다 교육 서류가 한 세트씩 남아 있다','계획, 결과 결재, 등록부, 자료 모두',0]], ev:[], evt:'감사 때 제출하는 문서'},
+
+ {id:'m4', part:'연간 업무', title:'매월 점검 업무', gt:'업무 따라하기',
+  basis:'정보보안 기본지침 제10조, 안전성 확보조치 기준 제8조', when:'매월 세 번째 수요일',
+  lead:'매달 반복하는 일입니다. 같은 날 한꺼번에 하고 한 번의 보고로 결재하면 빠뜨리지 않습니다.',
+  todo:[
+   ['내PC지키미를 실행해 전 PC가 점검을 마쳤는지 확인했다','업무용, 공용, 민원인 PC 모두 대상'],
+   ['취약 항목이 남은 PC는 조치하고 안내했다','목표는 전부 안전',false,true],
+   ['사이버보안 진단일지(별지 제33호)를 작성했다','양식 폴더의 실시일지 양식 사용',true,true],
+   ['홈페이지 접속기록을 점검하고 결과를 개인정보 내부 관리계획 별표 2 양식에 남겼다','',true,true],
+   ['홈페이지 게시글, 첨부파일에 개인정보나 비공개 자료가 없는지 점검했다','',false,true],
+   ['CCTV 보관 기간이 지난 영상이 삭제됐는지 확인해 개인영상정보 관리대장에 적었다','',true,true],
+   ['진단 결과를 보안담당관에게 보고하는 내부결재를 올렸다','일지만 쓰고 보고를 안 하면 지적됩니다',true,true]
+  ],
+  warn:[['달력에서 빠진 달이 없다','12개월 연속으로 기록이 있어야 합니다',3]], ev:[], evt:'감사 때 제출하는 문서', use:[['gpi','월 진단의 날 점검 결과를 확인합니다.'],['home','접속기록과 게시글을 점검합니다.']]},
+
+ {id:'m5', part:'기기·시설', title:'PC, 기자재, 저장매체 관리', gt:'업무 따라하기',
+  basis:'정보보안 기본지침 제59조, 제71~76조', when:'상시, 교체·불용 시',
+  lead:'PC와 기자재는 사용 중 보안과 폐기 때 자료 삭제가 핵심입니다.',
+  todo:[
+   ['PC마다 부팅 비밀번호, 화면보호기, 최신 백신, 보안패치, 공유폴더 해제를 확인했다','비밀번호는 분기별 1회 이상 변경 안내',false,true],
+   ['업무용 PC 개인정보 파일을 Privacy-i로 점검하고 삭제 또는 암호화했다','',false,true],
+   ['정보화 기자재와 스마트기기를 품의, 등록, 불용 처리한다','',false,false],
+   ['PC를 교체, 폐기, 반납, 수리 반출할 때 저장매체 자료를 삭제했다','사용기관, 부서, 사용자 표시물도 제거',false,true],
+   ['외부 업체에 수리·복구를 맡길 때 보안서약서를 받고 정보보안담당관 통제를 받았다','',false,true],
+   ['디지털 복합기의 저장 작업을 정기적으로 삭제하고 교직원망, 학생망 공용을 막았다','',false,false],
+   ['교육용 무선망은 업무망과 분리하고 사용자 인증 비밀번호를 설정했다','',false,false],
+   ['유지보수 업체가 노트북, USB를 반출·입할 때 악성코드와 자료 반출 여부를 확인하고 대장에 기록한다','노트북 반출입 탭에 반출과 반납을 적으면 월간 보고서에 자동으로 들어갑니다',false,true]
+  ],
+  warn:[['Privacy-i 점검 누락, 취약 PC 미조치 사례가 많았다','2025년에 6개 학교가 지적받았습니다',6]], ev:[], evt:'감사 때 제출하는 문서', use:[['gpi','PC 점검 상태를 확인합니다.'],['privacyi','개인정보 파일 검출, 암호화를 확인합니다.']]},
+
+ {id:'m6', part:'기기·시설', title:'서버실, 네트워크, 재난 대비', gt:'업무 따라하기',
+  basis:'정보보안 기본지침 제84·85·89조', when:'상시, 변경 시',
+  lead:'서버실 출입관리와 장비 관리책임자 지정, 장애 대비 계획을 관리합니다.',
+  todo:[
+   ['서버실에 통제구역 표찰을 붙이고 출입문 이중 잠금을 유지한다','부착 사진 보관',false,true],
+   ['상시출입인가자 명부와 출입통제대장을 서버실에 비치하고 기록한다','대장 분실 시 경위서 양식',false,true],
+   ['장비별 관리책임자와 취급자를 지정하고 라벨을 붙였다','',false,true],
+   ['네트워크 구성도와 IP 현황이 어디에 있는지, 누가 관리하는지(유지보수 업체) 확인하고 비공개로 보관한다','홈페이지나 메신저에 올리지 않고 보관 위치와 관리 업체를 적어 둡니다',false,true],
+   ['시스템 접근 로그를 1년 이상 보관하고 설정, 저장자료를 정기 백업한다','로그가 어느 장비에 남고 누가 관리하는지 확인합니다',false,true],
+   ['기술지원업체 비상연락망을 최신으로 유지한다','',false,true],
+   ['재난방지 대책을 세우고 네트워크, 시스템이 바뀌면 다시 세운다','관리적, 물리적, 기술적 대책 모두',false,true]
+  ],
+  warn:[['표찰 미부착, 인가자 미지정, 출입 기록 소홀 사례가 있었다','2025년에 4개 학교가 지적받았습니다',4]], ev:[], evt:'감사 때 제출하는 문서', use:[]},
+
+ {id:'m7', part:'기기·시설', title:'홈페이지·계정·인증서 관리', gt:'업무 따라하기',
+  basis:'정보보안 기본지침 제68조', when:'상시, 담당자 변경 시',
+  lead:'홈페이지는 공개 범위와 담당자 관리가 핵심입니다. 방침류 문서가 최신으로 올라와 있는지도 봅니다.',
+  todo:[
+   ['홈페이지 관리·운영 계획(게시자료 범위, 방법, 권한, 담당자)을 세웠다','홈페이지 개편, 담당자 변경 시 개정',false,true],
+   ['메뉴(게시판)별 담당자를 지정하고 변경 때 현행화했다','',false,true],
+   ['비공개 업무자료와 개인정보가 게시되지 않았는지 주기적으로 본다','월 점검과 함께',false,true],
+   ['개인정보 처리방침, 영상정보처리기기 운영·관리 방침, 위탁 사항을 최신으로 공개했다','',false,true],
+   ['관리자 접속은 지정한 관리용 단말기로 한다','',false,false],
+   ['통합메신저와 기관인증서 관리자를 확인했다','업무분장표의 담당자 확인',false,false]
+  ],
+  warn:[['운영 계획 미수립, 담당자 미지정 사례가 있었다','2025년에 6개 학교가 지적받았습니다',6]], ev:[], evt:'감사 때 제출하는 문서', use:[['home','게시판 담당자와 공개 문서를 확인합니다.']]},
+
+ {id:'m8', part:'개인정보 업무', title:'동의서, 제3자 제공, 위탁', gt:'업무 따라하기',
+  basis:'개인정보 보호법 제15·17·22·26조', when:'학년도 초, 수집·제공·위탁 때마다',
+  lead:'교직원이 만드는 동의서를 정보부장이 검토합니다. 서식 기준을 안내문으로 만들어 두면 편합니다.',
+  todo:[
+   ['동의서 검토 기준(필수 고지 4가지, 항목 명시, 기간 명시, 별도 동의란)을 정리해 안내했다','목적, 항목, 보유·이용 기간, 거부 권리와 불이익'],
+   ['만 14세 미만은 보호자(법정대리인) 동의란이 있는지 확인했다',''],
+   ['제3자 제공 동의서에 제공받는 자, 목적, 항목, 기간, 거부 시 불이익이 있다',''],
+   ['실제로 받은 동의서 중 대표 샘플 2건을 따로 보관했다','개인정보를 가려서 보관',false,true],
+   ['위탁 업무(늘봄 등)마다 계약서, 서약서, 수탁자 교육, 점검표, 파기 확인서를 갖췄다','',false,true],
+   ['위탁 업무와 수탁자를 홈페이지에 게시하고 개인정보 처리방침과 일치시켰다','',false,true],
+   ['목적 외 이용이나 제3자 제공이 있었다면 홈페이지에 게재했다','']
+  ],
+  warn:[['동의서 항목, 기간이 포괄적이어서 지적받은 사례가 있었다','2025년에 2개 학교가 지적받았습니다',2],['위탁 자료가 빠져 지적받은 사례가 있었다','2025년에 5개 학교가 지적받았습니다',5]], ev:[], evt:'감사 때 제출하는 문서', use:[['home','위탁 사항 게시를 확인합니다.']]},
+
+ {id:'m9', part:'개인정보 업무', title:'개인정보 파기와 파일 정비', gt:'업무 따라하기',
+  basis:'개인정보 보호법 제21조, 개인정보 내부 관리계획 제10장', when:'매년 2~3월 일제정비, 사안 발생 시',
+  lead:'보유 기간이 지난 개인정보는 절차에 따라 파기하고, 일제정비 결과를 개인정보 처리방침에 반영합니다.',
+  todo:[
+   ['개인정보파일별 보유기간을 산정하고 종합지원시스템 등록 내용과 맞췄다','',false,true],
+   ['파일 파기 때 파기 요청서(별지 제4호)를 쓰고 파기 관리대장에 기록했다','',false,true],
+   ['종합지원시스템에서 파기한 파일의 등재 내역을 삭제했다','',false,true],
+   ['일부 파기는 파기 공문을 내부결재했다','',false,true],
+   ['파기 방법이 개인정보 내부 관리계획 기준(완전파괴, 전용 소자, 초기화·덮어쓰기)에 맞다','별표 5 참고'],
+   ['일제정비 결과를 개인정보 처리방침의 파일 목록에 반영했다','종합지원시스템 목록과 같아야 합니다',false,true]
+  ],
+  warn:[['종합지원시스템과 홈페이지 개인정보 처리방침의 파일 목록이 달라 지적받은 사례가 있었다','2025년에 4개 학교가 지적받았습니다',4]], ev:[], evt:'감사 때 제출하는 문서', use:[['ppo','파일 등록과 파기 등재를 확인합니다.']]},
+
+ {id:'m10', part:'개인정보 업무', title:'CCTV 운영', gt:'업무 따라하기',
+  basis:'개인정보 보호법 제25조, 시행령 제22~26조', when:'수립·개정 시, 관리대장은 달마다',
+  lead:'CCTV 관련 문서는 방침, 개인정보 내부 관리계획, 관리대장 세 가지입니다. 설치 대수나 위치가 바뀌면 방침을 고쳐 다시 공개합니다.',
+  todo:[
+   ['운영·관리 방침의 설치 대수, 위치, 촬영 범위가 현재 CCTV 현황과 같다','',false,true],
+   ['방침의 관리책임자, 접근권한자, 연락처가 올해 기준이다','',false,true],
+   ['방침을 홈페이지에 최신본으로 공개했다','',false,true],
+   ['개인영상정보 내부 관리계획이 있고 개정 이력이 맞다','개인정보 내부관리계획에 포함해도 됩니다',false,true],
+   ['개인영상정보 관리대장에 이용, 제공, 열람, 파기를 기록한다','',false,true],
+   ['안내판이 설치되어 있다',''],
+   ['열람 요구가 오면 열람 청구서(별지 제1호)로 처리하고 대장에 기록한다','']
+  ],
+  warn:[['방침 미공개, 개인정보 내부 관리계획 없음, 월별 파기 기록 누락 사례가 있었다','2025년에 6개 학교가 지적받았습니다',6]], ev:[], evt:'감사 때 제출하는 문서', use:[['home','공개된 방침을 확인합니다.']]},
+
+ {id:'m11', part:'보고·사고', title:'조사·보고 공문 대응', gt:'업무 따라하기',
+  basis:'교육청 공문', when:'공문 접수 시',
+  lead:'해마다 반복되는 조사와 보고입니다. 회신한 공문은 연도별 폴더에 모아 두면 다음 해에 그대로 참고합니다.',
+  todo:[
+   ['정보화업무 담당자 현황 조사(3월 1일, 9월 1일 기준)에 회신했다','정보화업무 담당자의 이름과 업무를 공문 양식에 적어 회신합니다',false,true],
+   ['CCTV 설치·운영 현황 조사에 회신했다','CCTV 대수, 위치가 방침과 같아야 합니다',false,true],
+   ['고유식별정보 안전조치 관리실태 조사가 오면 회신했다','주민등록번호 등 고유식별정보를 어떻게 보호하는지 공문 양식에 적어 회신합니다',false,true],
+   ['개인정보 안전성 확보조치 체크리스트 조사가 오면 회신했다','',false,true],
+   ['개인정보 내부관리계획 이행실태 점검을 하고 점검표(별지 제1호)를 결재했다','',true,true],
+   ['Privacy-i 점검 후 업무용 PC 개인정보 삭제·암호화 조치 결과를 제출했다','',false,true],
+   ['회신한 공문을 연도별 폴더에 모았다','증빙 폴더 이름 앞에 연도 접두어']
+  ],
+  warn:[], ev:[], evt:'감사 때 제출하는 문서'},
+
+ {id:'m12', part:'보고·사고', title:'사고 대응', gt:'업무 따라하기',
+  basis:'정보보안 종합 계획, 개인정보 내부 관리계획 제7장', when:'사고 발생 시',
+  lead:'사고가 났을 때 어디에 알리고 무엇을 보존할지 미리 확인해 둡니다.',
+  todo:[
+   ['사이버 공격이 의심되면 사고 PC를 인터넷에서 분리하고 전원을 끄지 않고 그대로 보존한다','정보보안 종합계획 사고대응 항목'],
+   ['정보보안담당관과 경기교육사이버안전센터에 신고하는 경로를 알고 있다','기술지원은 센터 연락처를 정보보안 종합계획에서 확인'],
+   ['조치 결과는 기한 안에 보고한다','정보보안 종합계획은 5일 이내, 주요 침해사고는 2일 이내로 안내'],
+   ['개인정보 유출 때 정보주체에게 알릴 내용 5가지를 알고 있다','유출 항목, 시점·경위, 피해 최소화 방법, 대응조치와 구제절차, 신고 접수 부서와 연락처'],
+   ['유출 신고 기준(1천 명 이상, 민감정보·고유식별정보, 해킹)을 알고 있다','신고서는 별지 제2호, 조치확인서는 별지 제3호'],
+   ['사고 뒤 원인을 보완하고 전 직원에게 사례를 전파한다','']
+  ],
+  warn:[], ev:[]}
+];
+
+function pick(ids){return ids.map(function(i){var all=ALL.concat(MAN);for(var k=0;k<all.length;k++){if(all[k].id===i)return all[k];}}).filter(Boolean);}
+var MODES={
+ manual:{label:'업무매뉴얼',sub:'정보부장 연간 업무 따라하기 · 감사 때 쓰는 증빙은 업무 안에 표시',steps:pick(['sites','plan','yr','m1','m2','m3','m4','m5','m6','m7','m8','m9','m10','m11','m12'])},
+ audit:{label:'정보감사 대비',sub:'감사 안내가 오면 문서별로 한 번 더 점검하고 제출',steps:pick(['s0','d1','d2','d3','d4','d5','d6','d7','d8','d9','d10','d11','d12','d13','d14','z'])}
+};
+MODES.month={label:'월간 보고서',sub:'매달 기안 한 번으로 끝내는 점검 결과표 · 바뀐 것만 고치면 됩니다',monthly:true,steps:MODES.manual.steps};
+MODES.qa={label:'교육청 문의',sub:'궁금한 것을 적어 두고 답변을 기록합니다',monthly:true,qa:true,steps:MODES.manual.steps};
+MODES.loan={label:'노트북 반출입',sub:'반출할 때 적고, 돌아오면 반납 버튼을 누릅니다',monthly:true,loan:true,steps:MODES.manual.steps};
+var STEPS=MODES.manual.steps;
+/* ---------- 상태 ---------- */
+var DEVKEY='suip_dev_v1';
+var state={checks:{},cur:0,free:false,urls:{},info:{},custom:[],mode:'manual',curs:{}};
+try{var dv0=JSON.parse(localStorage.getItem(DEVKEY)||'null');if(dv0){if(dv0.cur>=0)state.cur=dv0.cur;if(dv0.mode&&MODES[dv0.mode])state.mode=dv0.mode;if(dv0.curs)state.curs=dv0.curs;}}catch(e){}
+function save(){try{localStorage.setItem(DEVKEY,JSON.stringify({cur:state.cur,mode:state.mode,curs:state.curs}));}catch(e){}if(window.SYNC)window.SYNC.dirty();}
+
+function items(s){
+  var a=[];
+  if(s.sitesStep){allSites().forEach(function(x){a.push({k:'site.'+x.id,kind:'t',txt:x.name+' 관리자 권한을 이전 담당자에게 인계받았다',sm:x.todo,sum:x.id});});}
+  s.todo.forEach(function(t,i){a.push({k:s.id+'.t'+i,kind:'t',txt:t[0],sm:t[1],req:!!t[2],aud:!!t[3]});});
+  (s.warn||[]).forEach(function(t,i){a.push({k:s.id+'.w'+i,kind:'w',txt:t[0],sm:t[1],n:t[2]});});
+  (s.ev||[]).forEach(function(t,i){
+    if(t.indexOf('제출 자료 없음')===0)return;
+    a.push({k:s.id+'.e'+i,kind:'e',txt:t});
+  });
+  return a;
+}
+function stat(s){var it=items(s),d=0;it.forEach(function(x){if(state.checks[x.k])d++;});return{done:d,total:it.length};}
+function isDone(i){var t=stat(STEPS[i]);return t.total>0&&t.done===t.total;}
+function unlockedStrict(i){return state.free||i===0||isDone(i-1);}
+
+/* ---------- 화면 ---------- */
+document.addEventListener('toggle',function(e){var t=e.target;if(t&&t.dataset&&t.dataset.d)openDet[t.dataset.d]=t.open;},true);
+var navEl=document.getElementById('nav'),view=document.getElementById('view');
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c];});}
+
+function renderNav(){
+  var h='',last='';
+  STEPS.forEach(function(s,i){
+    if(s.part!==last){h+='<div class="grp">'+esc(s.part)+'</div>';last=s.part;}
+    var st=stat(s),done=isDone(i),open=unlockedStrict(i);
+    var cls='st'+(done?' done':'')+(i===state.cur?' cur':'')+(!open?' lock':'');
+    var label=i===STEPS.length-1?'끝':String(i);
+    h+='<button type="button" class="'+cls+'" data-i="'+i+'"'+(open?'':' disabled')+(i===state.cur?' aria-current="step"':'')+'>'
+      +'<span class="dot">'+(done?'✓':(open?esc(label):'🔒'))+'</span>'
+      +'<span class="t">'+esc(s.title)+'</span><span class="n">'+st.done+'/'+st.total+'</span></button>';
+  });
+  navEl.innerHTML=h;
+}
+function renderProgress(){
+  var D=0,T=0;STEPS.forEach(function(s){var t=stat(s);D+=t.done;T+=t.total;});
+  var pct=T?Math.round(D/T*100):0;
+  document.getElementById('barFill').style.width=pct+'%';
+  document.getElementById('progTxt').textContent=pct+'% ('+D+'/'+T+')';
+}
+var openDet={};
+function detBlock(k){
+  var d=DET[k];if(!d)return '';
+  var h='<details class="more" data-d="'+k+'"'+(openDet[k]?' open':'')+'><summary>쉽게 풀어 보기</summary><dl>';
+  d.forEach(function(r){
+    h+='<dt>'+esc(r[0])+'</dt><dd>';
+    if(Array.isArray(r[1])){h+='<ul>'+r[1].map(function(t){return '<li>'+esc(t)+'</li>';}).join('')+'</ul>';}
+    else h+=esc(r[1]);
+    h+='</dd>';
+  });
+  return h+'</dl></details>';
+}
+var LOC={
+'m5.t7':'정보보안 종합계획 4. "외부용역업체 보안관리" 칸 > 다(유지보수 노트북, USB 반출·입 시 악성코드 감염·무단 반출 확인, 결과를 분임정보보안담당관에게 보고)',"m1.t0": "6개 문서 전체(정보보안 종합계획, 개인정보 보호 업무 추진계획, 개인정보 내부 관리계획, 개인정보 처리방침, 개인영상정보 내부 관리계획, 영상정보처리기기 운영·관리 방침)", "m1.t1": "정보보안 종합계획 3. 정보보안 활동 > 가(담당관 지정) / 4. 세부추진계획 뒤쪽 표 > 나(장비 관리책임자), 다(상시출입인가자) / 6. 업무 담당자 지정 표", "m1.t2": "정보보안 종합계획 4. 세부활동 표의 \"정보보호교육\" 칸, 5. 개인정보 보호 활동 > 다 \"개인정보보호교육 실시\" 칸 / 개인정보 보호 업무 추진계획 Ⅲ-1", "m1.t3": "정보보안 종합계획 4. 세부추진계획 > 가 정보보안 세부활동 표의 칸 이름: 정보보호교육, 사이버보안진단의 날 운영, PC 등 보안관리, 자료보안, 외부용역업체 보안관리, 정보보안사고대응, 정보시스템 저장매체 불용처리, 무선랜 보안관리, 디지털복합기 보안관리, 주요 정보통신시설 관리", "m1.t4": "2026 정보보안 종합계획에서 \"재난\"이라는 말을 찾지 못했습니다. 가장 가까운 내용은 4. 세부추진계획 > 주요 정보통신시설 관리 > 마(시스템의 주기적 점검: 서버 설정·저장자료 정기 백업)입니다. 재난방지 대책이 따로 결재된 문서가 있는지 확인하고, 없으면 정보보안 종합계획에 항목을 넣어야 합니다.", "m1.t5": "개인정보 보호 업무 추진계획 Ⅲ 2026년 추진 계획 1~8번(교육, 수집, 홈페이지 노출 방지, 위탁, 일제정비, 파기, 이행실태 점검, 유출 대응)", "m1.t6": "개인정보 내부 관리계획 맨 앞 개정 이력·시행일, 제3장 제8~12조(책임자, 담당자, 취급자)", "m1.t7": "개인정보 처리방침 1번(파일 등록 현황), 6번(위탁), 10번(보호책임자), 12번(변경 이력)", "m2.t0": "정보보안 종합계획 3. 정보보안 활동 > 가 정보보안 담당관 지정 표", "m2.t1": "정보보안 종합계획 5. > 가 개인정보보호 책임자 지정 / 개인정보 내부 관리계획 제8조 / 개인정보 처리방침 10번", "m2.t2": "정보보안 종합계획 4. > 주요 정보통신시설 관리 > 가 통제구역 설정(표찰)", "m2.t3": "정보보안 종합계획 4. 뒤쪽 표 > 다 통제구역 상시출입 인가자 지정", "m2.t4": "정보보안 종합계획 4. > 주요 정보통신시설 관리 > 라 홈페이지 등 공개서버 관리(사용자 접근권한)", "m2.t5": "개인정보 내부 관리계획 제15조(접근권한의 관리)", "m2.t6": "개인정보 내부 관리계획 제12조(개인정보취급자), 제14조(취급자 교육)", "m3.t0": "정보보안 종합계획 4. \"정보보호교육\" 칸(3월 교직원 교육), 5. \"개인정보보호교육 실시\" 칸(3월, 9월) / 개인정보 보호 업무 추진계획 Ⅲ-1", "m3.t6": "기본계획 6개 문서에는 없음(정보통신윤리교육은 별도 추진계획으로 결재)", "m4.t0": "정보보안 종합계획 4. \"사이버보안진단의 날 운영\" 칸(가 대상, 나 내PC지키미 진단, 다 결과보고)", "m4.t1": "정보보안 종합계획 4. \"사이버보안진단의 날 운영\" 칸 > 나 진단방법", "m4.t2": "정보보안 종합계획 4. \"사이버보안진단의 날 운영\" 칸 > 다 결과보고(실시 일지)", "m4.t3": "개인정보 내부 관리계획 제19조(접속기록 보관 및 점검, 별표 2) / 개인정보 보호 업무 추진계획 Ⅲ-3", "m4.t4": "정보보안 종합계획 5. > 다 \"개인정보 유·노출 예방활동\" 칸 > 나(매월 게시글, 첨부파일 점검) / 개인정보 보호 업무 추진계획 Ⅲ-3", "m4.t5": "개인영상정보 내부 관리계획 제11조(보관 및 파기), 제12조(기록 및 관리), 제15조(관리대장)", "m4.t6": "정보보안 종합계획 4. \"사이버보안진단의 날 운영\" 칸 > 다 결과보고", "m5.t0": "정보보안 종합계획 4. \"PC 등 보안관리\" 칸(가~바)", "m5.t1": "정보보안 종합계획 5. > 다 \"개인정보 유·노출 예방활동\" 칸 > 가(Privacy-i) / 개인정보 보호 업무 추진계획 뒤쪽 교육자료 Ⅲ(에이전트, 암호화 점검)", "m5.t3": "정보보안 종합계획 4. \"정보시스템 저장매체 불용처리\" 칸 > 가, 다", "m5.t4": "정보보안 종합계획 4. \"정보시스템 저장매체 불용처리\" 칸 > 나", "m5.t5": "정보보안 종합계획 4. \"디지털복합기 보안관리\" 칸", "m5.t6": "정보보안 종합계획 4. \"무선랜 보안관리\" 칸", "m6.t0": "정보보안 종합계획 4. > 주요 정보통신시설 관리 > 가 통제구역 설정(표찰, 이중 잠금)", "m6.t1": "정보보안 종합계획 4. > 주요 정보통신시설 관리 > 가 / 뒤쪽 표 다 통제구역 상시출입 인가자", "m6.t2": "정보보안 종합계획 4. 뒤쪽 표 > 나 시스템 및 장비별 관리책임자 지정", "m6.t3": "정보보안 종합계획 4. > 주요 정보통신시설 관리 > 다 \"네트워크 구성도 및 IP 현황은 비공개자료로 관리\" (파일 자체는 6개 문서에 없음)", "m6.t4": "정보보안 종합계획 4. > 주요 정보통신시설 관리 > 마 시스템의 주기적 점검(접근자료 1년 이상 보관, 정기 백업)", "m6.t5": "정보보안 종합계획 4. 뒤쪽 표 > 라 시스템별 기술지원업체 비상연락망", "m6.t6": "2026 정보보안 종합계획에서 \"재난\"이라는 말을 찾지 못했습니다. 가장 가까운 내용은 4. 세부추진계획 > 주요 정보통신시설 관리 > 마(시스템의 주기적 점검: 서버 설정·저장자료 정기 백업)입니다. 재난방지 대책이 따로 결재된 문서가 있는지 확인하고, 없으면 정보보안 종합계획에 항목을 넣어야 합니다.", "m7.t0": "정보보안 종합계획 4. > 주요 정보통신시설 관리 > 라 홈페이지 등 공개서버 관리", "m7.t1": "정보보안 종합계획 4. > 주요 정보통신시설 관리 > 라 홈페이지 등 공개서버 관리(사용자 접근권한)", "m7.t2": "정보보안 종합계획 4. \"자료보안\" 칸 > 다 / 개인정보 보호 업무 추진계획 Ⅲ-3", "m7.t3": "홈페이지 게시본이 개인정보 처리방침, 영상정보처리기기 운영·관리 방침 문서입니다(개인정보 처리방침 6번 위탁, 영상정보처리기기 운영·관리 방침 4번 설치 현황)", "m7.t4": "정보보안 종합계획 4. > 주요 정보통신시설 관리 > 라(관리용 단말기 지정)", "m8.t0": "개인정보 보호 업무 추진계획 Ⅲ-2 개인정보 수집 / 정보보안 종합계획 5. > 다 \"개인정보 수집 동의방법 개선\" 칸", "m8.t1": "개인정보 보호 업무 추진계획 Ⅲ-2 개인정보 수집 / 개인정보 처리방침 2번(14세 미만 아동)", "m8.t2": "개인정보 내부 관리계획 제32조(목적 외 이용 및 제3자 제공) / 개인정보 처리방침 4번", "m8.t4": "개인정보 보호 업무 추진계획 Ⅲ-4 처리 위탁 / 개인정보 내부 관리계획 제9장 제27·28조 / 개인정보 처리방침 6번", "m8.t5": "개인정보 처리방침 6번 개인정보처리 위탁 / 개인정보 내부 관리계획 제27조", "m8.t6": "개인정보 내부 관리계획 제32조 / 개인정보 처리방침 4번", "m9.t0": "개인정보 보호 업무 추진계획 Ⅲ-5 개인정보파일 일제 정비 / 개인정보 처리방침 1번", "m9.t1": "개인정보 보호 업무 추진계획 Ⅲ-6 개인정보 파기 실시 / 개인정보 내부 관리계획 제10장 제29~31조 / 개인정보 처리방침 3번", "m9.t4": "개인정보 내부 관리계획 제31조(파기방법) / 개인정보 처리방침 3번 > 2 파기방법", "m9.t5": "정보보안 종합계획 5. > 다 \"개인정보파일 일제정비 및 개인정보 처리방침 정비\" 칸 > 다 / 개인정보 처리방침 1번", "m10.t0": "영상정보처리기기 운영·관리 방침 4번(설치 대수, 설치 위치 및 촬영범위)", "m10.t1": "영상정보처리기기 운영·관리 방침 2번(관리책임자, 운영담당자·접근권한자)", "m10.t3": "개인영상정보 내부 관리계획 제2장 제4·5조(수립, 공표), 맨 앞 개정 이력", "m10.t4": "개인영상정보 내부 관리계획 제12조(이용·제공·파기 기록), 제15조(관리대장)", "m10.t5": "개인영상정보 내부 관리계획 제9조(안내판의 설치)", "m10.t6": "개인영상정보 내부 관리계획 제14조(열람 등 요구) / 영상정보처리기기 운영·관리 방침 7번", "m11.t0": "정보보안 종합계획 6. 정보보안 및 개인정보보호 관련 업무 담당자 지정 표", "m11.t1": "영상정보처리기기 운영·관리 방침 4번(설치 현황)", "m11.t4": "개인정보 내부 관리계획 제6조(이행 실태 점검) / 개인정보 보호 업무 추진계획 Ⅲ-7", "m11.t5": "정보보안 종합계획 5. > 다 \"개인정보 유·노출 예방활동\" 칸 > 가", "m12.t0": "정보보안 종합계획 4. \"정보보안사고대응\" 칸 > 가 초동 조치 / 5. > 라 사이버침해 대응 절차", "m12.t1": "정보보안 종합계획 4. \"정보보안사고대응\" 칸 / 5. > 라 사이버침해 대응 절차(경기교육사이버안전센터)", "m12.t2": "정보보안 종합계획 5. > 라 사이버침해 대응 절차(후속조치)", "m12.t3": "개인정보 내부 관리계획 제7장 제23조(유출 등의 통지) / 정보보안 종합계획 5. > 다 \"유·노출 시 조치 대응\" 칸 / 개인정보 보호 업무 추진계획 Ⅲ-8", "m12.t4": "개인정보 내부 관리계획 제24조(유출 등의 신고) / 개인정보 보호 업무 추진계획 Ⅲ-8", "m12.t5": "개인정보 내부 관리계획 제25조(유출 사고 대응) / 정보보안 종합계획 5. > 다 \"유·노출 시 조치 대응\" 칸"};
+var MONLOC={
+'m7.t4':'현행화 항목 > 홈페이지: 홈페이지 관리용 단말기(지정 PC와 IP)',
+'m7.t5':'현행화 항목 > 홈페이지: 통합메신저 관리자, 기관인증서(GPKI) 관리자',
+'m2.t5':'현행화 항목 > 정보보안: 업무 시스템별 담당자',
+'m2.t7':'현행화 항목 > 담당자가 바뀐 시스템 권한 전체',
+'m5.t7':'점검 결과 > 노트북, USB 등 반출·입(노트북 반출입 탭 내용이 자동 반영)',"m1.t1": "현행화 항목 > 정보보안: 정보보안담당관, 부서별 관리자, 상시출입인가자, 시스템·장비별 관리책임자", "m1.t6": "현행화 항목 > 개인정보 보호: 책임자, 담당자, 시행일과 개정 이력", "m1.t7": "현행화 항목 > 개인정보 보호: 개인정보 처리 위탁 업체, 고충처리·열람청구 부서, 시행일", "m2.t0": "현행화 항목 > 정보보안: 정보보안담당관", "m2.t1": "현행화 항목 > 개인정보 보호: 개인정보 보호책임자 성명과 연락처", "m2.t2": "현행화 항목 > 정보보안: 시스템·장비별 관리책임자", "m2.t3": "현행화 항목 > 정보보안: 상시출입인가자(통제구역)", "m2.t4": "현행화 항목 > 홈페이지: 홈페이지 관리자, 홈페이지 게시판 관리자", "m4.t0": "점검 결과 > 내PC지키미 개인별 PC 보안 점검", "m4.t1": "점검 결과 > 내PC지키미 개인별 PC 보안 점검(조치 내용은 비고에)", "m4.t2": "월간 보고서 기안 자체가 진단 결과 보고입니다(매달 첫째 주에 지난달 것을 한 번에)", "m4.t3": "점검 결과 > 개인정보처리시스템(홈페이지 등) 접속기록 점검", "m4.t4": "점검 결과 > 게시판별 비공개 자료 노출 여부", "m4.t6": "월간 보고서 기안(매달 첫째 주, 지난달 진단 결과를 한 번에 결재)", "m5.t1": "점검 결과 > Privacy-i 점검, 검출 항목 암호화 등 안전조치", "m5.t3": "점검 결과 > 정보시스템, 저장매체 불용·폐기 처리", "m5.t4": "점검 결과 > 정보시스템, 저장매체 불용·폐기 처리(비고에 업체와 조치)", "m6.t0": "점검 결과 > 통제구역(서버실) 출입 기록", "m6.t1": "점검 결과 > 통제구역(서버실) 출입 기록 / 현행화 항목 > 정보보안: 상시출입인가자", "m6.t2": "현행화 항목 > 정보보안: 시스템·장비별 관리책임자", "m6.t3": "현행화 항목 > 정보보안: 네트워크 구성도·IP 현황 보관 위치", "m6.t4": "현행화 항목 > 정보보안: 시스템 접근 로그 보관 위치와 보관 기간", "m6.t5": "현행화 항목 > 정보보안: 네트워크·시스템 유지보수 업체와 담당자 연락처", "m7.t0": "현행화 항목 > 홈페이지: 홈페이지 관리자", "m7.t1": "현행화 항목 > 홈페이지: 홈페이지 게시판 관리자", "m7.t2": "점검 결과 > 게시판별 비공개 자료 노출 여부", "m7.t3": "점검 결과 > 불법 폰트 사용 여부(홈페이지 점검과 같이)", "m8.t4": "점검 결과 > 위탁업체 개인정보 처리 점검 (보안서약서, 교육 확인서, 동의서 등)", "m8.t5": "현행화 항목 > 개인정보 보호: 개인정보 처리 위탁 업체", "m10.t0": "현행화 항목 > CCTV: 설치 대수, 설치 위치와 촬영범위", "m10.t1": "현행화 항목 > CCTV: 관리책임자, 접근권한자, 시설 책임자와 연락처", "m11.t0": "현행화 항목 전체(담당자 이름이 바뀌었는지 같이 확인)", "m12.t0": "점검 결과 > 보안사고, 침해 발생", "m12.t5": "점검 결과 > 보안사고, 침해 발생(조치 내용은 비고에)"};
+var MONREF={"m1.t1": {"s": ["정보보안담당관", "부서별 정보보안 관리자(교무)", "부서별 정보보안 관리자(행정)", "상시출입인가자(통제구역)", "시스템·장비별 관리책임자"]}, "m1.t6": {"s": ["개인정보 보호책임자 성명과 연락처", "개인정보 보호담당자와 담당부서 연락처", "개인정보 처리방침·개인정보 내부 관리계획 시행일과 개정 이력"]}, "m1.t7": {"s": ["개인정보 처리 위탁 업체", "고충처리·열람청구 부서와 전화", "개인정보 보호책임자 성명과 연락처"]}, "m2.t0": {"s": ["정보보안담당관"]}, "m2.t1": {"s": ["개인정보 보호책임자 성명과 연락처"]}, "m2.t2": {"s": ["시스템·장비별 관리책임자"]}, "m2.t3": {"s": ["상시출입인가자(통제구역)"]}, "m2.t4": {"s": ["홈페이지 관리자", "홈페이지 게시판 관리자"]}, "m4.t0": {"r": ["r1"]}, "m4.t1": {"r": ["r1"]}, "m4.t3": {"r": ["r5"]}, "m4.t4": {"r": ["r3"]}, "m5.t1": {"r": ["r2"]}, "m5.t3": {"r": ["r8"]}, "m5.t4": {"r": ["r8"]}, "m5.t7": {"r": ["r7"]}, "m6.t0": {"r": ["r6"]}, "m6.t1": {"s": ["상시출입인가자(통제구역)"], "r": ["r6"]}, "m6.t2": {"s": ["시스템·장비별 관리책임자"]}, "m6.t3": {"s": ["네트워크 구성도·IP 현황 보관 위치"]}, "m6.t4": {"s": ["시스템 접근 로그 보관 위치와 보관 기간(1년 이상)"]}, "m6.t5": {"s": ["네트워크·시스템 유지보수 업체와 담당자 연락처"]}, "m7.t0": {"s": ["홈페이지 관리자"]}, "m7.t1": {"s": ["홈페이지 게시판 관리자"]}, "m7.t2": {"r": ["r3"]}, "m7.t3": {"r": ["r4"]}, "m8.t4": {"r": ["r9"]}, "m8.t5": {"s": ["개인정보 처리 위탁 업체"]}, "m10.t0": {"s": ["CCTV 설치 대수", "CCTV 설치 위치와 촬영범위"]}, "m10.t1": {"s": ["개인영상정보 관리책임자", "CCTV 접근권한자(교감, 안전담당, 정보담당)", "CCTV 시설 책임자와 연락처", "CCTV 촬영시간, 보관기간, 보관장소"]}, "m10.t3": {"s": ["개인영상정보 관리책임자"]}, "m11.t0": {"s": ["정보보안담당관", "개인정보 보호책임자 성명과 연락처", "개인정보 보호담당자와 담당부서 연락처"]}, "m12.t0": {"r": ["r10"]}, "m12.t5": {"r": ["r10"]}};
+var MONREF2={'m7.t4':{s:['홈페이지 관리용 단말기(지정 PC와 IP)']},'m7.t5':{s:['통합메신저 관리자','기관인증서(GPKI) 관리자']},'m2.t5':{s:['업무 시스템별 담당자(내PC지키미, Privacy-i, 종합지원시스템, 업무관리시스템)']},'m2.t7':{s:['홈페이지 관리자','홈페이지 게시판 관리자','업무 시스템별 담당자(내PC지키미, Privacy-i, 종합지원시스템, 업무관리시스템)']}};
+for(var _k in MONREF2)MONREF[_k]=MONREF2[_k];
+MONREF['yr.t1']={r:['r1']};MONREF['yr.t3']={r:['r2']};MONLOC['yr.t1']='점검 결과 > 내PC지키미 개인별 PC 보안 점검(월간 보고서 작성)';MONLOC['yr.t3']='점검 결과 > Privacy-i 점검, 검출 항목 암호화 등 안전조치(월간 보고서 작성)';
+var MONADD={"m1.t1": ["정보업무 담당자와 정보보안담당자"], "m1.t6": ["개인정보 보호 분야별책임자"], "m1.t7": ["개인정보파일 목록(종합지원시스템 등록 현황)"], "m1.t8": ["개인정보보호·정보보안 계획 수립 및 기안 담당"], "m3.t0": ["교육계획 수립, 시행, 교육 실적 제출 담당", "개인정보 보호교육 일정과 대상(3월, 9월)"], "m3.t4": ["교육계획 수립, 시행, 교육 실적 제출 담당"], "m3.t3": ["보안서약서 징구 담당"], "m2.t6": ["보안서약서 징구 담당"], "m3.t6": ["정보통신윤리교육 추진, 자체평가 담당"], "m4.t2": ["사이버보안 진단 일지 작성 담당"], "m5.t2": ["정보화기자재, 스마트기기(품의, 등록, 불용) 담당"], "m5.t6": ["무선통신망 인프라(ID, PW) 관리 담당"], "m5.t4": ["유지보수·용역 업체 목록과 계약기간"], "m5.t7": ["유지보수·용역 업체 목록과 계약기간"], "m6.t2": ["정보시스템·장비 목록(품명, 설치 장소, 임대·활용 여부)", "학내전산망(서버실 포함) 담당"], "m6.t3": ["IP 대장 관리 담당"], "m7.t3": ["소프트웨어(불법 SW, 폰트) 담당"], "m8.t0": ["개인정보 수집·이용 안내와 동의서 담당"], "m9.t0": ["개인정보파일 보유기간 산정, 파기 관리 담당", "개인정보파일 관리대장 담당(교무, 행정)", "개인정보파일 목록(종합지원시스템 등록 현황)"], "m9.t1": ["개인정보 파기 분야별 책임자", "개인정보파일 보유기간 산정, 파기 관리 담당"], "m9.t2": ["개인정보보호 종합지원시스템 관리 담당"], "m9.t5": ["개인정보파일 목록(종합지원시스템 등록 현황)"], "m10.t4": ["CCTV 입출력자료대장, 개인영상자료대장 담당"], "m11.t0": ["교육통계 담당", "보안감사(정보, 일반) 담당"]};
+for(var _a in MONADD){MONREF[_a]=MONREF[_a]||{};MONREF[_a].s=(MONREF[_a].s||[]).concat(MONADD[_a]);}
+function monLive(k){var f=MONREF[k];if(!f)return '';var m=monInit(),h='<ul class="live">';
+  (f.s||[]).forEach(function(role){var q=m.staff.filter(function(x){return x.role===role;})[0];if(!q)return;h+='<li><span>'+esc(role)+'</span> <b>'+(q.name?esc(q.name):'<i>아직 적지 않음</i>')+'</b></li>';});
+  (f.r||[]).forEach(function(id){var r=m.rows.filter(function(x){return x.id===id;})[0];if(!r)return;var e=effRes(m.ym,r);h+='<li><span>'+esc(r.name)+' ('+esc(monTitle(m.ym))+')</span> <b>'+esc(e.r)+(e.n?' · '+esc(e.n):'')+'</b></li>';});
+  return h+'</ul>';}
+function locBlock(k){var h='';if(LOC[k])h+='<div class="loc"><b>기본계획에서 찾기</b> '+esc(LOC[k])+'</div>';if(MONLOC[k]||MONREF[k])h+='<div class="loc mon"><b>월간 보고서에서 관리</b> '+esc(MONLOC[k]||'')+' <button class="btn sm" type="button" data-gomode="month">월간 보고서 열기</button>'+monLive(k)+'</div>';return h;}
+var FLD={
+ 'm6.t3':['구성도·IP 현황 파일 보관 위치','가지고 있는 사람·업체와 연락처','관리 방법(비공개 보관, 갱신 시기 등)'],
+ 'm6.t4':['로그가 남는 장비·시스템','관리 업체와 담당자 연락처','보관 기간과 백업 방법'],
+ 'm6.t5':['비상연락망 문서 위치','주 기술지원 업체와 연락처'],
+ 'm6.t6':['재난방지 대책 문서 위치(결재번호)','관리 방법']
+};
+function fldBlock(k){
+  if(!FLD[k])return '';if(!state.fld)state.fld={};var v=state.fld[k]||{};
+  return '<div class="fld"><b>적어 두기</b>'+FLD[k].map(function(l,i){return '<label><span>'+esc(l)+'</span><input type="text" class="url" data-fld="'+esc(k)+'" data-fi="'+i+'" value="'+esc(v[i]||'')+'" placeholder="여기에 적어 두세요"></label>';}).join('')+'</div>';
+}
+view.addEventListener('input',function(e){var t=e.target,k=t.getAttribute&&t.getAttribute('data-fld');if(!k)return;if(!state.fld)state.fld={};if(!state.fld[k])state.fld[k]={};state.fld[k][t.getAttribute('data-fi')]=t.value;save();});
+function group(title,list,cls,s){
+  if(!list.length)return '';
+  var d=0;list.forEach(function(x){if(state.checks[x.k])d++;});
+  var h='<section class="blk"><h3 class="'+(cls==='warn'?'warnh':'')+'">'+title+' <span class="cnt">'+d+'/'+list.length+'</span></h3><ul class="chk '+cls+'">';
+  list.forEach(function(x){
+    var on=!!state.checks[x.k];
+    h+='<li class="'+(on?'on':'')+'"><label><input type="checkbox" data-k="'+x.k+'"'+(on?' checked':'')+'><span class="tx"><span>'
+      +(x.req?'<span class="tag req">필수</span>':'')+(x.aud?'<span class="tag aud">감사 증빙</span>':'')+(x.kind==='w'&&x.n?'<span class="tag">2025 지적 '+x.n+'교</span>':(x.kind==='w'?'<span class="tag">확인</span>':''))
+      +esc(x.txt)+'</span>'+(x.sm?'<span class="sm">'+esc(x.sm)+'</span>':'')+(x.sum?'<span class="sm" data-sum="'+x.sum+'">'+esc(infoSum(x.sum))+'</span>':'')+'</span></label>'+locBlock(x.k)+fldBlock(x.k)+detBlock(x.k)+attBlock(x.k)+'</li>';
+  });
+  return h+'</ul></section>';
+}
+
+function allSites(){return SITES.concat(state.custom||[]);}
+function infoSum(id){
+  var i=(state.info||{})[id]||{},a=[];
+  if(i.owner)a.push('담당자 '+i.owner);if(i.uid)a.push('아이디 '+i.uid);if(i.memo)a.push('비밀번호 위치 '+i.memo);
+  return a.length?a.join(' · '):'위 카드에 담당자, 아이디, 비밀번호 위치를 적어 두면 여기에 표시됩니다';
+}
+function siteUrl(id){var d=allSites().filter(function(x){return x.id===id;})[0];return (state.urls&&state.urls[id])||(d&&d.url)||'';}
+function useBlock(s){
+  if(!s.use)return '';
+  var h='<section class="blk"><h3>이 문서를 확인할 때 열 사이트</h3><div class="uses">';
+  s.use.forEach(function(u){
+    var d=allSites().filter(function(x){return x.id===u[0];})[0];if(!d)return;
+    var url=siteUrl(d.id);
+    h+='<div class="use"><div><b>'+esc(d.name)+'</b><div class="sm2">'+esc(u[1])+'</div></div>'
+      +(url?'<a class="btn" href="'+esc(url)+'" target="_blank" rel="noopener">열기</a>':'<span class="sm2">주소 미입력, 관리 사이트 단계에서 입력</span>')+'</div>';
+  });
+  return h+'</div></section>';
+}
+function sitesBlock(){
+  var h='<section class="blk"><h3>관리 사이트 목록 <span class="cnt">'+allSites().length+'곳</span></h3><div class="uses">';
+  allSites().forEach(function(d){
+    var url=siteUrl(d.id);
+    h+='<div class="use col"><div style="display:flex;justify-content:space-between;gap:8px"><div><b>'+esc(d.name)+'</b><div class="sm2">'+esc(d.use||'')+'</div></div>'+(d.custom?'<button class="btn" type="button" data-del="'+d.id+'">삭제</button>':'')+'</div>'
+      +'<div class="urlrow"><input type="url" class="url" data-url="'+d.id+'" id="url-'+d.id+'" placeholder="주소를 붙여넣으세요" value="'+esc(url)+'" aria-label="'+esc(d.name)+' 주소">'
+      +(url?'<a class="btn" href="'+esc(url)+'" target="_blank" rel="noopener">열기</a>':'')+'</div>'
+      +'<div class="urlrow"><input type="text" class="url" data-info="'+d.id+'" data-f="owner" id="owner-'+d.id+'" placeholder="관리 담당자(예: 행정실장, 업체 담당자 이름·연락처)" autocomplete="off" value="'+esc(((state.info||{})[d.id]||{}).owner||'')+'" aria-label="'+esc(d.name)+' 관리 담당자"></div>'
+      +'<div class="urlrow"><input type="text" class="url" data-info="'+d.id+'" data-f="uid" id="uid-'+d.id+'" placeholder="아이디(선택)" autocomplete="off" value="'+esc(((state.info||{})[d.id]||{}).uid||'')+'" aria-label="'+esc(d.name)+' 아이디">'
+      +'<input type="text" class="url" data-info="'+d.id+'" data-f="memo" id="memo-'+d.id+'" placeholder="비밀번호는 어디에 있는지(예: 전임자, 행정실장, 보안 메모)" autocomplete="off" value="'+esc(((state.info||{})[d.id]||{}).memo||'')+'" aria-label="'+esc(d.name)+' 메모"></div></div>';
+  });
+  h+='<div class="use col"><b>사이트 추가</b><div class="urlrow"><input type="text" class="url" id="newName" placeholder="사이트 이름"><input type="text" class="url" id="newUse" placeholder="용도(선택)"><button class="btn primary" id="addSite" type="button">추가</button></div></div>';
+  return h+'<div class="sm2">비밀번호 자체는 이 페이지에 적지 마세요. 이 브라우저에 그대로 저장되어 보안 점검에서 지적될 수 있습니다. 대신 어디에 보관되어 있는지만 적어 두세요.</div></div></section>';
+}
+var REL={
+ d1:{f:['정보보안 종합 계획 본문(이 문서 자체)'],m:['현행화 항목 > 정보보안: 정보보안담당관, 부서별 관리자, 상시출입인가자, 시스템·장비별 관리책임자가 바뀌면 월간 보고서에서 고치고 정보보안 종합계획도 함께 수정']},
+ d2:{f:['정보보안 종합 계획의 교육 항목','개인정보 보호 업무 추진계획의 연수 일정'],m:['월간 보고서에는 없음 (3월에 할 일의 "연수 실시", "연수 결과 결재"에서 만든 등록부, 서약서가 증빙)']},
+ d3:{f:['정보보안 종합 계획의 사이버보안진단의 날 운영 항목'],m:['점검 결과 > 내PC지키미 점검, Privacy-i 점검, 접속기록 점검','월간 보고서 기안을 매달 올린 것이 곧 이 일지의 보고 증빙']},
+ d4:{f:['2026 정보보안 종합계획에서는 재난방지 항목을 찾지 못했습니다(가장 가까운 것은 4. 주요 정보통신시설 관리 > 마 정기 백업). 별도 결재 문서가 있는지 확인하세요'],m:['월간 보고서에는 없음 (재난방지 대책이 바뀔 때만 수정)']},
+ d5:{f:['정보보안 종합 계획 안의 상시출입인가자 명단'],m:['점검 결과 > 서버실(통제구역) 출입 기록','현행화 항목 > 정보보안: 상시출입인가자, 네트워크 구성도·IP 현황 보관 위치, 유지보수 업체, 시스템 접근 로그 보관 위치']},
+ d6:{f:['홈페이지 관리·운영 계획 (정보보안 종합계획에 포함하거나 별도 문서)'],m:['점검 결과 > 게시판 비공개 자료·개인정보 노출 점검','현행화 항목 > 홈페이지: 홈페이지 관리자, 게시판 관리자']},
+ d7:{f:['개인정보 내부관리계획 본문(이 문서 자체, 5장 접속기록 점검, 별표 2)'],m:['점검 결과 > 홈페이지 접속기록 점검','현행화 항목 > 개인정보 보호: 보호책임자, 담당자, 시행일과 개정 이력']},
+ d8:{f:['개인정보 보호업무 추진계획 본문(이 문서 자체, 매월 점검 일정과 교육 계획)'],m:['점검 결과 > 접속기록 점검, 게시판 개인정보 노출 점검 (개인정보 보호 업무 추진계획의 매월 점검을 월간 보고서로 이행)']},
+ d9:{f:['개인정보 처리방침 본문(홈페이지 게시본과 같아야 함)'],m:['현행화 항목 > 개인정보 보호: 보호책임자 연락처, 고충처리·열람청구 부서, 위탁 업체, 시행일']},
+ d10:{f:['6개 기본 문서에 없음 (실제 받은 동의서 서식을 따로 모음)'],m:['월간 보고서에는 없음']},
+ d11:{f:['개인정보 처리방침의 위탁 항목'],m:['점검 결과 > 위탁업체 관리·감독','현행화 항목 > 개인정보 보호: 개인정보 처리 위탁 업체','수탁자 점검 자료는 3월에 할 일에서 올림']},
+ d12:{f:['개인정보 내부관리계획의 서약, 파기 관련 장','개인정보 처리방침의 개인정보파일 목록 (일제정비 결과 반영)'],m:['점검 결과 > 불용·폐기 시 개인정보 삭제 확인','서약서는 3월에 할 일에서, 파일 일제정비는 연중에 챙길 일에서 처리']},
+ d13:{f:['개인정보 내부관리계획 5장(기술적, 물리적 안전조치)과 별표 2 점검 양식'],m:['점검 결과 > 홈페이지 접속기록 점검, Privacy-i 점검(개인정보 파일 검출·암호화)']},
+ d14:{f:['개인영상정보 내부 관리계획','영상정보처리기기 운영·관리 방침(홈페이지 게시본과 같아야 함)'],m:['현행화 항목 > CCTV: 관리책임자, 접근권한자, 시설 책임자, 설치 대수, 설치 위치, 촬영시간·보관기간']}
+};
+function relBlock(s){
+  if(state.mode!=='audit'||!REL[s.id])return '';var r=REL[s.id];
+  var li=function(a){return a.map(function(t){return '<li>'+esc(t)+'</li>';}).join('');};
+  var edl=s.id==='d11'?'<div class="relrow"><span class="tag">양식</span><ul><li><a href="#" data-edu="1">'+esc(EDUDOC[0])+'</a></li></ul></div>':'';
+  return '<section class="blk rel"><h3>이 내용은 어디에 있나요</h3><div class="relrow"><span class="tag">기본계획 파일</span><ul>'+li(r.f)+'</ul></div><div class="relrow"><span class="tag aud">월간 보고서</span><ul>'+li(r.m)+'</ul></div>'+edl+'<button class="btn" type="button" data-gomode="month">월간 보고서 탭 열기</button></section>';
+}
+function renderView(){
+  var i=state.cur,s=STEPS[i],all=items(s);
+  var todo=all.filter(function(x){return x.kind==='t';}),warn=all.filter(function(x){return x.kind==='w';}),ev=all.filter(function(x){return x.kind==='e';});
+  var st=stat(s),done=isDone(i),last=i===STEPS.length-1;
+  var h='<div class="eyebrow">'+esc(s.part)+(s.cov?' · 점검표 '+esc(s.cov):'')+' · '+(i)+' / '+(STEPS.length-1)+'</div>';
+  h+='<h2>'+esc(s.title)+'</h2><div class="chips"><span class="chip">근거 <b>'+esc(s.basis)+'</b></span><span class="chip">시기 <b>'+esc(s.when)+'</b></span></div>';
+  h+='<p class="lead">'+esc(s.lead)+'</p>';
+  h+=useBlock(s);
+  h+=relBlock(s);
+  if(s.tree){h+='<section class="blk"><h3>구글 드라이브 증빙 폴더 구조 <button class="btn" id="cpTree" type="button" style="margin-left:auto">복사</button></h3><pre class="tree" id="tree">'+esc(s.tree)+'</pre></section>';}
+  if(s.sitesStep)h+=sitesBlock();
+  h+=group(s.gt||(s.sitesStep?'권한 인계 확인':(s.id==='s0'?'따라하기':'문서에 들어 있는지 확인')),todo,'do',s);
+  h+=group('확인 필요',warn,'warn',s);
+  h+=group(s.evt||'제출할 서류 확보',ev,'ev',s);
+  var noEv=(s.ev||[]).filter(function(t){return t.indexOf('제출 자료 없음')===0;});
+  if(noEv.length)h+='<div class="note">'+esc(noEv[0])+'</div>';
+  if(done)h+='<div class="done-banner">이 단계를 마쳤습니다.'+(last?' 모든 준비가 끝났습니다.':' 다음 단계가 열렸습니다.')+'</div>';
+  h+='<div class="nav"><button class="btn" id="prev" type="button"'+(i===0?' disabled':'')+'>이전 단계</button>';
+  if(!done)h+='<span class="hint">남은 항목 '+(st.total-st.done)+'개를 체크하면 다음 단계로 넘어갈 수 있습니다</span>';
+  h+=last?'<span></span>':'<button class="btn primary" id="next" type="button"'+((done||state.free)?'':' disabled')+'>다음 단계</button>';
+  h+='</div>';
+  view.innerHTML=h;
+}
+function renderAll(){renderTabs();var M=!!MODES[state.mode].monthly;document.body.classList.toggle('monthly',M);if(M){navEl.innerHTML='';if(MODES[state.mode].qa)renderQA();else if(MODES[state.mode].loan)renderLoan();else renderMonthly();var gd=document.createElement('div');gd.className='modeguide';gd.innerHTML='<b>'+esc(MODES[state.mode].label)+'</b> '+({month:'매달 첫째 주에 지난달 점검을 한 번에 기안합니다.',qa:'교육청에 물어볼 것을 적어 둡니다.',loan:'노트북·USB 반출과 반납을 기록합니다. 월간 보고서에 자동 반영됩니다.'}[state.mode]||'')+' <span>순서대로 따라하기는 "업무매뉴얼" 탭에서 합니다.</span>';view.insertBefore(gd,view.firstChild);}else{renderNav();renderProgress();renderView();}document.getElementById('free').checked=!!state.free;}
+
+
+function renderTabs(){
+  var h='';Object.keys(MODES).forEach(function(k){h+='<button type="button" class="tab" data-mode="'+k+'" aria-pressed="'+(state.mode===k)+'">'+esc(MODES[k].label)+'</button>';});
+  document.getElementById('tabs').innerHTML=h;
+  document.getElementById('sub').textContent=MODES[state.mode].sub;
+}
+function setMode(m){
+  if(!MODES[m]||m===state.mode)return;
+  state.curs[state.mode]=state.cur;state.mode=m;STEPS=MODES[m].steps;
+  state.cur=state.curs[m]||0;if(!unlockedStrict(state.cur))state.cur=0;
+  save();renderAll();scTo(0,0);
+}
+view.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-gomode]');if(b){setMode(b.getAttribute('data-gomode'));}});
+document.getElementById('tabs').addEventListener('click',function(e){var b=e.target.closest('button.tab');if(b)setMode(b.getAttribute('data-mode'));});
+function go(i){
+  if(i<0||i>=STEPS.length)return;
+  if(!unlockedStrict(i))return;
+  state.cur=i;save();renderAll();
+  scTo({top:0,behavior:'smooth'});
+  navEl.classList.remove('open');
+}
+
+navEl.addEventListener('click',function(e){var b=e.target.closest('button.st');if(b&&!b.disabled)go(+b.getAttribute('data-i'));});
+view.addEventListener('change',function(e){
+  var iid=e.target.getAttribute('data-info');
+  if(iid){state.info[iid]=state.info[iid]||{};state.info[iid][e.target.getAttribute('data-f')]=e.target.value.trim();save();var se=view.querySelector('[data-sum="'+iid+'"]');if(se)se.textContent=infoSum(iid);return;}
+  var uid=e.target.getAttribute('data-url');
+  if(uid){state.urls[uid]=e.target.value.trim();save();var y0=scY();renderAll();scTo(0,y0);return;}
+  var k=e.target.getAttribute('data-k');if(!k)return;
+  var wasDone=isDone(state.cur);
+  if(e.target.checked)state.checks[k]=1;else delete state.checks[k];
+  save();
+  var y=scY();renderAll();scTo(0,y);
+  var nowDone=isDone(state.cur);
+  if(nowDone&&!wasDone){var nx=document.getElementById('next');if(nx)nx.focus({preventScroll:true});}
+});
+view.addEventListener('click',function(e){
+  var t=e.target;
+  if(t.id==='addSite'){var nm=document.getElementById('newName').value.trim();if(!nm)return;state.custom.push({id:'c'+Date.now(),name:nm,use:document.getElementById('newUse').value.trim(),todo:'',custom:true});save();var y1=scY();renderAll();scTo(0,y1);return;}
+  var dl=t.getAttribute&&t.getAttribute('data-del');if(dl){state.custom=state.custom.filter(function(c){return c.id!==dl;});delete state.checks['site.'+dl];save();var y2=scY();renderAll();scTo(0,y2);return;}
+  if(t.id==='next')go(state.cur+1);
+  else if(t.id==='prev')go(state.cur-1);
+  else if(t.id==='cpTree'){
+    var txt=document.getElementById('tree').textContent;
+    try{navigator.clipboard.writeText(txt).then(function(){t.textContent='복사됨';},function(){t.textContent='복사 실패';});}catch(err){t.textContent='복사 실패';}
+  }
+});
+document.getElementById('free').addEventListener('change',function(e){state.free=e.target.checked;save();renderAll();});
+document.getElementById('mnav').addEventListener('click',function(){navEl.classList.toggle('open');});
+var rs=document.getElementById('reset'),rt=null;
+rs.addEventListener('click',function(){
+  if(rs.getAttribute('data-arm')==='1'){
+    STEPS.forEach(function(st0){items(st0).forEach(function(x){delete state.checks[x.k];});});state.cur=0;state.free=false;save();rs.removeAttribute('data-arm');rs.textContent='처음부터';renderAll();scTo(0,0);
+  }else{
+    rs.setAttribute('data-arm','1');rs.textContent='체크가 모두 지워집니다. 한 번 더 누르면 실행';
+    clearTimeout(rt);rt=setTimeout(function(){rs.removeAttribute('data-arm');rs.textContent='처음부터';},4000);
+  }
+});
+/* ---------- 월간 보고서: 매달 기안 한 번에 첨부할 점검 결과표 ---------- */
+var DEFROWS=[
+ {id:'r1',cat:'사이버보안진단의 날',name:'내PC지키미 개인별 PC 보안 점검(전 항목 안전 100점)',site:'gpi'},
+ {id:'r2',cat:'사이버보안진단의 날',name:'Privacy-i 점검, 검출 항목 암호화 등 안전조치',site:'privacyi'},
+ {id:'r3',cat:'홈페이지',name:'게시판별 비공개 자료 노출 여부',site:'home'},
+ {id:'r4',cat:'홈페이지',name:'불법 폰트 사용 여부',site:'home'},
+ {id:'r5',cat:'접속기록',name:'개인정보처리시스템(홈페이지 등) 접속기록 점검',site:'home'},
+ {id:'r6',cat:'기타',name:'통제구역(서버실) 출입 기록'},
+ {id:'r7',cat:'기타',name:'노트북, USB 등 반출·입'},
+ {id:'r8',cat:'기타',name:'정보시스템, 저장매체 불용·폐기 처리'},
+ {id:'r9',cat:'기타',name:'위탁업체 개인정보 처리 점검 (보안서약서, 교육 확인서, 동의서 등)'},
+ {id:'r10',cat:'기타',name:'보안사고, 침해 발생'}
+];
+var GROUPS=['정보보안','개인정보 보호','CCTV','홈페이지','업무 담당자 지정표','기타'];
+var DEFSTAFF=[
+ ['정보보안담당관','정보보안 종합계획','정보보안'],
+ ['부서별 정보보안 관리자(교무)','정보보안 종합계획','정보보안'],
+ ['부서별 정보보안 관리자(행정)','정보보안 종합계획','정보보안'],
+ ['상시출입인가자(통제구역)','정보보안 종합계획','정보보안'],
+ ['시스템·장비별 관리책임자','정보보안 종합계획','정보보안'],
+ ['개인정보 보호책임자 성명과 연락처','정보보안 종합계획, 개인정보 내부 관리계획, 개인정보 처리방침','개인정보 보호'],
+ ['개인정보 보호담당자와 담당부서 연락처','개인정보 내부 관리계획, 개인정보 처리방침','개인정보 보호'],
+ ['고충처리·열람청구 부서와 전화','개인정보 처리방침','개인정보 보호'],
+ ['개인정보 처리 위탁 업체','개인정보 처리방침','개인정보 보호'],
+ ['처리방침·내부관리계획 시행일과 개정 이력','개인정보 내부 관리계획, 개인정보 처리방침','개인정보 보호'],
+ ['개인영상정보 관리책임자','개인영상정보 내부 관리계획, 영상정보처리기기 운영·관리 방침','CCTV'],
+ ['CCTV 접근권한자(교감, 안전담당, 정보담당)','영상정보처리기기 운영·관리 방침','CCTV'],
+ ['CCTV 시설 책임자와 연락처','영상정보처리기기 운영·관리 방침','CCTV'],
+ ['CCTV 설치 대수','영상정보처리기기 운영·관리 방침','CCTV'],
+ ['CCTV 설치 위치와 촬영범위','영상정보처리기기 운영·관리 방침','CCTV'],
+ ['CCTV 촬영시간, 보관기간, 보관장소','영상정보처리기기 운영·관리 방침','CCTV'],
+ ['네트워크 구성도·IP 현황 보관 위치','정보보안 종합계획(비공개 자료 관리)','정보보안'],
+ ['네트워크·시스템 유지보수 업체와 담당자 연락처','정보보안 종합계획(기술지원업체 비상연락망)','정보보안'],
+ ['시스템 접근 로그 보관 위치와 보관 기간(1년 이상)','정보보안 종합계획(시스템 주기적 점검)','정보보안'],
+ ['홈페이지 관리자','월간 점검','홈페이지'],
+ ['홈페이지 게시판 관리자','월간 점검','홈페이지'],
+ ['홈페이지 관리용 단말기(지정 PC와 IP)','정보보안 종합계획(홈페이지 등 공개서버 관리)','홈페이지'],
+ ['통합메신저 관리자','업무분장표','홈페이지'],
+ ['기관인증서(GPKI) 관리자','업무분장표','홈페이지'],
+ ['업무 시스템별 담당자(내PC지키미, Privacy-i, 종합지원시스템, 업무관리시스템)','정보보안 종합계획(담당자 지정)','정보보안'],
+ ['정보업무 담당자와 정보보안담당자','정보보안 종합계획 6. 지정표','업무 담당자 지정표'],
+ ['개인정보보호·정보보안 계획 수립 및 기안 담당','정보보안 종합계획 6. 지정표','업무 담당자 지정표'],
+ ['교육계획 수립, 시행, 교육 실적 제출 담당','정보보안 종합계획 6. 지정표','업무 담당자 지정표'],
+ ['보안서약서 징구 담당','정보보안 종합계획 6. 지정표','업무 담당자 지정표'],
+ ['개인정보파일 보유기간 산정, 파기 관리 담당','정보보안 종합계획 6. 지정표','업무 담당자 지정표'],
+ ['개인정보파일 관리대장 담당(교무, 행정)','정보보안 종합계획 6. 지정표','업무 담당자 지정표'],
+ ['개인정보 파기 분야별 책임자','정보보안 종합계획 6. 지정표, 개인정보 처리방침','업무 담당자 지정표'],
+ ['IP 대장 관리 담당','정보보안 종합계획 6. 지정표','업무 담당자 지정표'],
+ ['사이버보안 진단 일지 작성 담당','정보보안 종합계획 6. 지정표','업무 담당자 지정표'],
+ ['학내전산망(서버실 포함) 담당','정보보안 종합계획 6. 지정표','업무 담당자 지정표'],
+ ['무선통신망 인프라(ID, PW) 관리 담당','정보보안 종합계획 6. 지정표','업무 담당자 지정표'],
+ ['정보화기자재, 스마트기기(품의, 등록, 불용) 담당','정보보안 종합계획 6. 지정표','업무 담당자 지정표'],
+ ['CCTV 입출력자료대장, 개인영상자료대장 담당','정보보안 종합계획 6. 지정표, 개인영상정보 내부 관리계획','업무 담당자 지정표'],
+ ['소프트웨어(불법 SW, 폰트) 담당','정보보안 종합계획 6. 지정표','업무 담당자 지정표'],
+ ['개인정보 수집·이용 안내와 동의서 담당','정보보안 종합계획 6. 지정표','업무 담당자 지정표'],
+ ['교육통계 담당','정보보안 종합계획 6. 지정표','업무 담당자 지정표'],
+ ['개인정보보호 종합지원시스템 관리 담당','정보보안 종합계획 6. 지정표','업무 담당자 지정표'],
+ ['보안감사(정보, 일반) 담당','정보보안 종합계획 6. 지정표','업무 담당자 지정표'],
+ ['정보통신윤리교육 추진, 자체평가 담당','종합계획 6. 지정표','업무 담당자 지정표'],
+ ['정보시스템·장비 목록(품명, 설치 장소, 임대·활용 여부)','종합계획 4. 표(시스템 및 장비별 관리책임자)','정보보안'],
+ ['유지보수·용역 업체 목록과 계약기간','종합계획 4. 외부용역업체 보안관리','정보보안'],
+ ['개인정보파일 목록(종합지원시스템 등록 현황)','처리방침 1번, 추진계획 Ⅲ-5','개인정보 보호'],
+ ['개인정보 보호 분야별책임자','내부관리계획 제10조, 처리방침 10번','개인정보 보호'],
+ ['개인정보 보호교육 일정과 대상(3월, 9월)','종합계획 5. 교육 칸, 추진계획 Ⅲ-1','개인정보 보호']
+];
+var DEFVAL={};
+var RESULTS=['해당없음','양호','조치 완료','이상 있음'];
+function monInit(){
+  var m=state.mon;
+  if(!m){
+    var d=new Date();d.setDate(1);d.setMonth(d.getMonth()-1);
+    m=state.mon={rows:DEFROWS.map(function(r){return {id:r.id,cat:r.cat,name:r.name,site:r.site||''};}),staff:DEFSTAFF.map(function(t,i){return {id:'p'+i,role:t[0],docs:t[1],grp:t[2],name:''};}),v:3,months:{},ym:d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)};
+  }
+  if(!m.v||m.v<2){
+    var oldn={};(m.staff||[]).forEach(function(q){if(q.name)oldn[q.role]=q.name;});
+    m.staff=DEFSTAFF.map(function(t,i){return {id:'p'+i,role:t[0],docs:t[1],grp:t[2],name:oldn[t[0]]||''};});m.v=3;m.months={};
+  }
+  if((m.addv||0)<3){m.addv=3;(function(){var have={};m.staff.forEach(function(q){have[q.role]=1;});var ids={};m.staff.forEach(function(q){ids[q.id]=1;});DEFSTAFF.forEach(function(t,i){if(!have[t[0]]){var id='p'+i;while(ids[id])id+='x';ids[id]=1;m.staff.push({id:id,role:t[0],docs:t[1],grp:t[2],name:''});}});})();}
+  if(!m.pref1){m.pref1=1;m.staff.forEach(function(q){if(!q.name&&DEFVAL[q.role])q.name=DEFVAL[q.role];});}
+  if(!m.pref2){m.pref2=1;m.staff.forEach(function(q){if(q.name&&q.name.indexOf('신지훈')<0&&q.name.indexOf('정보업무 담당자')>=0){q.name=q.name.replace(/정보업무 담당자(?!\s*신지훈)/g,'정보업무 담당자 신지훈').replace('내PC지킴이·Privacy-i: 정보업무 담당자 신지훈','내PC지킴이·Privacy-i: 신지훈');}});}
+  if(!m.pref3){m.pref3=1;m.rows.forEach(function(r){if(r.name==='위탁업체 개인정보 처리 점검')r.name='위탁업체 개인정보 처리 점검 (보안서약서, 교육 확인서, 동의서 등)';});}
+  if(!m.pref4){m.pref4=1;var dm={};DEFSTAFF.forEach(function(t){dm[t[0]]=t[1];});m.staff.forEach(function(q){if(dm[q.role]!==undefined)q.docs=dm[q.role];});}
+  if(m.v!==3){var gm={};DEFSTAFF.forEach(function(t){gm[t[0]]=t[2];});m.staff.forEach(function(q){if(!q.grp)q.grp=gm[q.role]||'기타';});m.v=3;}
+  return m;
+}
+function thirdWed(ym){var y=+ym.slice(0,4),mo=+ym.slice(5,7),dow=new Date(y,mo-1,1).getDay();return 1+((3-dow+7)%7)+14;}
+function monData(ym){var m=monInit();if(!m.months[ym])m.months[ym]={res:{},date:'',confirmed:false};return m.months[ym];}
+function prevConfirmed(ym){var m=monInit(),ks=Object.keys(m.months).filter(function(k){return k<ym&&m.months[k].confirmed&&m.months[k].staff;}).sort();return ks.length?m.months[ks[ks.length-1]]:null;}
+function staffNow(ym){var m=monInit(),md=m.months[ym];return (md&&md.confirmed&&md.staff)?md.staff:m.staff;}
+function staffChanges(ym){
+  var cur=staffNow(ym),pv=prevConfirmed(ym),out={};
+  if(!pv)return out;
+  cur.forEach(function(p){var o=pv.staff.filter(function(q){return q.id===p.id;})[0];if(o&&(o.name||'')!==(p.name||''))out[p.id]=o.name||'(비어 있음)';});
+  return out;
+}
+function dayTxt(ym){var md=monData(ym);var d=md.date||(ym+'-'+('0'+thirdWed(ym)).slice(-2));return d;}
+function loanSummary(ym){
+  var L=loanList(),inM=L.filter(function(x){return String(x.outAt||'').slice(0,7)===ym;});
+  var open=L.filter(function(x){return !x.inAt&&String(x.outAt||'').slice(0,7)<=ym;});
+  if(!inM.length&&!open.length)return null;
+  var c={};inM.forEach(function(x){c[x.kind]=(c[x.kind]||0)+1;});
+  var parts=Object.keys(c).map(function(k){return k+' '+c[k];});
+  var t=inM.length?'반출 '+inM.length+'건('+parts.join(', ')+')':'이달 신규 반출 없음';
+  t+=open.length?', 미반납 '+open.length+'건':(inM.length?', 전부 반납':'');
+  return {note:t,res:open.length?'이상 있음':'양호'};
+}
+function effRes(ym,r){var md=monData(ym),v=md.res[r.id]||{},ls=r.id==='r7'?loanSummary(ym):null;
+  var res=v.r&&v.r!=='해당없음'?v.r:(ls?ls.res:(v.r||'해당없음'));
+  var note=v.n||(ls?ls.note:'');
+  return {r:res,n:note,auto:!!ls&&!(v.r&&v.r!=='해당없음')};}
+function monTitle(ym){return ym.slice(0,4)+'년 '+(+ym.slice(5,7))+'월';}
+function monReport(ym,asHtml){
+  var m=monInit(),md=monData(ym),ch=staffChanges(ym),st=staffNow(ym),cnt=Object.keys(ch).length;
+  var th='border:1px solid #444;padding:4px 8px;background:#eee;font-weight:bold;',td='border:1px solid #444;padding:4px 8px;',tg='border:1px solid #444;padding:4px 8px;background:#f5f5f5;font-weight:bold;';
+  var rows=m.rows.map(function(r){var v=effRes(ym,r);return [r.cat,r.name,v.r,v.n];});
+  function chtxt(p){return ch[p.id]?'변경 (전: '+ch[p.id]+')':'변경 없음';}
+  var grp={};st.forEach(function(p){var g=p.grp||'기타';(grp[g]=grp[g]||[]).push(p);});
+  if(!asHtml){
+    var t=monTitle(ym)+' 월간 정보보안·개인정보 보호 점검 결과\n점검일: '+dayTxt(ym)+'\n\n[점검 결과]\n'+rows.map(function(r){return r.join('\t');}).join('\n')+'\n\n[현행화 항목]';
+    GROUPS.forEach(function(g){if(grp[g]){t+='\n<'+g+'>\n'+grp[g].map(function(p){return [p.role,p.name||'(미입력)',p.docs||'',chtxt(p)].join('\t');}).join('\n');}});
+    return t;
+  }
+  var h='<div style="font-family:Malgun Gothic,sans-serif"><h3 style="margin:0 0 6px">'+esc(monTitle(ym))+' 월간 정보보안·개인정보 보호 점검 결과</h3><p style="margin:0 0 8px">점검일: '+esc(dayTxt(ym))+'</p>';
+  h+='<table style="border-collapse:collapse;width:100%"><tr><th style="'+th+'">구분</th><th style="'+th+'">점검 항목</th><th style="'+th+'">결과</th><th style="'+th+'">비고</th></tr>';
+  rows.forEach(function(r){h+='<tr><td style="'+td+'">'+esc(r[0])+'</td><td style="'+td+'">'+esc(r[1])+'</td><td style="'+td+'">'+esc(r[2])+'</td><td style="'+td+'">'+esc(r[3])+'</td></tr>';});
+  h+='</table><p style="margin:12px 0 4px"><b>현행화 항목</b> '+(cnt?'(변경 '+cnt+'건)':'(변경 없음)')+'</p><table style="border-collapse:collapse;width:100%"><tr><th style="'+th+'">항목</th><th style="'+th+'">현재 내용</th><th style="'+th+'">관련 문서</th><th style="'+th+'">변경</th></tr>';
+  GROUPS.forEach(function(g){if(!grp[g])return;
+    h+='<tr><td colspan="4" style="'+tg+'">'+esc(g)+'</td></tr>';
+    grp[g].forEach(function(p){h+='<tr><td style="'+td+'">'+esc(p.role)+'</td><td style="'+td+'">'+esc(p.name||'(미입력)')+'</td><td style="'+td+'">'+esc(p.docs||'')+'</td><td style="'+td+'">'+esc(chtxt(p))+'</td></tr>';});
+  });
+  return h+'</table></div>';
+}
+function monBody(ym){
+  return '1. 관련: 경기도교육청 정보보안 기본지침 제10조(사이버보안진단의 날)\n2. '+monTitle(ym)+' 사이버보안진단의 날 및 월간 정보보안·개인정보 보호 점검 결과를 붙임과 같이 보고합니다.\n\n붙임  '+monTitle(ym)+' 월간 정보보안·개인정보 보호 점검 결과 1부.  끝.';
+}
+function monPreview(){
+  var ym=monInit().ym,el=document.getElementById('monPrev');if(!el)return;
+  document.getElementById('monBody').value=monBody(ym);
+  el.innerHTML=monReport(ym,true);
+}
+function renderMonthly(){
+  var m=monInit(),ym=m.ym,md=monData(ym),ch=staffChanges(ym);
+  var h='<div class="eyebrow">월간 보고서</div><h2>매달 기안 한 번으로 끝내는 점검 결과표</h2>';
+  h+='<p class="lead">매달 첫째 주에 지난달 점검(세 번째 수요일 진단의 날 포함)을 한 번의 기안으로 올립니다. 이 표를 붙임으로 첨부합니다. 모든 항목은 기본이 "해당없음"이고, 지난달에 한 것만 결과를 바꿉니다. 담당자가 바뀌면 이름만 고치면 됩니다. 항목과 담당자 목록은 다음 달에도 그대로 이어집니다. 정해 두고 관리해야 하는 것(담당자, 보관 위치, 업체, 목록)은 모두 아래 3번 현행화 항목에 적고, 매달 PDF로 인쇄해 결재 붙임으로 보관합니다.</p>';
+  h+='<section class="blk"><h3>1. 어느 달 점검을 올리나요 <span class="cnt">보통 지난달</span></h3><div class="urlrow"><input type="month" class="url" data-m="ym" value="'+esc(ym)+'" style="max-width:200px"><label class="sm2" style="align-self:center">점검일 <input type="text" class="url" data-m="date" value="'+esc(dayTxt(ym))+'" style="width:130px"></label><button class="btn" type="button" data-ma="copyprev">지난달 내용 불러오기</button></div><div class="sm2" style="margin-top:6px">점검일 기본값은 그 달 세 번째 수요일입니다. '+(md.confirmed?'이 달은 확정되었습니다.':'')+'</div></section>';
+  h+='<section class="blk"><h3>2. 점검 결과</h3><div class="uses">';
+  m.rows.forEach(function(r){
+    var v=md.res[r.id]||{},ef=effRes(ym,r),cur=ef.r,url=r.site?siteUrl(r.site):'';
+    h+='<div class="use col"><div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><div><span class="tag">'+esc(r.cat)+'</span><b>'+esc(r.name)+'</b></div><div style="display:flex;gap:6px;flex:none">'+(url?'<a class="btn" href="'+esc(url)+'" target="_blank" rel="noopener">열기</a>':'')+'<button class="btn" type="button" data-ma="delrow" data-id="'+r.id+'">삭제</button></div></div>'
+      +'<div class="urlrow"><select class="url" data-m="res" data-id="'+r.id+'" style="flex:none;width:130px">'+RESULTS.map(function(o){return '<option'+(o===cur?' selected':'')+'>'+o+'</option>';}).join('')+'</select><input type="text" class="url" data-m="note" data-id="'+r.id+'" placeholder="비고(예: 3명 조치, 검출 파일 2건 암호화)" value="'+esc(v.n||'')+'"></div>'+(ef.auto?'<div class="sm2">노트북 반출입 대장 자동 반영: '+esc(ef.n)+'</div>':'')+'</div>';
+  });
+  h+='<div class="use col"><b>항목 추가</b><div class="urlrow"><input type="text" class="url" id="mrName" placeholder="점검 항목 이름"><button class="btn primary" type="button" data-ma="addrow">추가</button></div></div></div></section>';
+  h+='<section class="blk"><h3>3. 현행화 항목 <span class="cnt">변경이 있으면 표에 자동 표시</span></h3><div class="sm2" style="margin-bottom:8px">6개 문서에 들어 있는 담당자, 연락처, CCTV 정보입니다. 바뀐 것만 "현재 내용"을 고치면 됩니다. 바뀐 항목의 관련 문서도 같이 고쳐야 합니다.</div>';
+  var gmap={};m.staff.forEach(function(p){var g=p.grp||'기타';(gmap[g]=gmap[g]||[]).push(p);});
+  GROUPS.forEach(function(g){if(!gmap[g])return;
+    h+='<div class="gbox"><div class="gtitle">'+esc(g)+'</div><table class="gt"><tr><th style="width:34%">항목</th><th>현재 내용</th><th style="width:22%">관련 문서</th><th style="width:56px"></th></tr>';
+    gmap[g].forEach(function(p){
+      h+='<tr><td>'+esc(p.role)+'</td><td><input type="text" class="url" data-m="staff" data-id="'+p.id+'" placeholder="이름, 전화번호, 대수 등" value="'+esc(p.name||'')+'">'+(ch[p.id]?'<div class="sm2">변경됨 (전: '+esc(ch[p.id])+')</div>':'')+'</td><td class="sm2">'+esc(p.docs||'')+'</td><td><button class="btn" type="button" data-ma="delstaff" data-id="'+p.id+'">삭제</button></td></tr>';
+    });
+    h+='</table></div>';
+  });
+  var chDocs={};m.staff.forEach(function(p){if(ch[p.id])(p.docs||'').split(',').forEach(function(d){d=d.trim();if(d)chDocs[d]=1;});});
+  if(Object.keys(chDocs).length)h+='<div class="note">이번 달 변경으로 고쳐야 할 문서: <b>'+esc(Object.keys(chDocs).join(', '))+'</b></div>';
+  h+='<div class="use col" style="margin-top:8px"><b>항목 추가</b><div class="urlrow"><input type="text" class="url" id="msName" placeholder="항목 이름"><select class="url" id="msGrp" style="flex:none;width:130px">'+GROUPS.map(function(g){return '<option>'+g+'</option>';}).join('')+'</select><button class="btn primary" type="button" data-ma="addstaff">추가</button></div></div></section>';
+  h+='<section class="blk"><h3>4. 기안문 본문과 첨부 표</h3><textarea id="monBody" class="url" rows="6" style="width:100%" readonly></textarea><div class="urlrow" style="margin-top:8px;flex-wrap:wrap"><button class="btn primary" type="button" data-ma="cpbody">본문 복사</button><button class="btn primary" type="button" data-ma="cptable">첨부 표 복사</button><button class="btn primary" type="button" data-ma="print">PDF로 인쇄</button><button class="btn" type="button" data-ma="savehtml">인쇄용 파일 저장(.html)</button><button class="btn" type="button" data-ma="confirm">'+(md.confirmed?'확정 취소':'이 달 확정(담당자 기록 저장)')+'</button></div><div class="sm2" id="monMsg" style="margin-top:6px">표를 복사해서 한글 문서에 붙여 넣고 저장한 뒤 기안의 붙임으로 올리세요.</div><div id="monPrev" class="prevbox"></div></section>';
+  view.innerHTML=h;monPreview();
+}
+function monMsg(t){var e=document.getElementById('monMsg');if(e)e.textContent=t;}
+view.addEventListener('change',function(e){
+  var t=e.target,k=t.getAttribute&&t.getAttribute('data-m');if(!k)return;
+  var m=monInit(),ym=m.ym,md=monData(ym),id=t.getAttribute('data-id');
+  if(k==='ym'){if(t.value){m.ym=t.value;save();renderAll();}return;}
+  if(k==='date'){md.date=t.value.trim();save();monPreview();return;}
+  if(k==='res'){md.res[id]=md.res[id]||{};md.res[id].r=t.value;save();monPreview();return;}
+  if(k==='note'){md.res[id]=md.res[id]||{};md.res[id].n=t.value.trim();save();monPreview();return;}
+  if(k==='staff'){m.staff.forEach(function(p){if(p.id===id)p.name=t.value.trim();});save();var y=scY();renderAll();scTo(0,y);return;}
+});
+view.addEventListener('click',function(e){
+  var b=e.target.closest&&e.target.closest('[data-ma]');if(!b)return;
+  var a=b.getAttribute('data-ma'),m=monInit(),ym=m.ym,md=monData(ym),id=b.getAttribute('data-id'),y=scY();
+  if(a==='addrow'){var n=document.getElementById('mrName').value.trim();if(!n)return;m.rows.push({id:'x'+Date.now(),cat:'기타',name:n,site:''});save();renderAll();scTo(0,y);}
+  else if(a==='delrow'){m.rows=m.rows.filter(function(r){return r.id!==id;});save();renderAll();scTo(0,y);}
+  else if(a==='addstaff'){var s=document.getElementById('msName').value.trim();if(!s)return;m.staff.push({id:'q'+Date.now(),role:s,docs:'',grp:document.getElementById('msGrp').value,name:''});save();renderAll();scTo(0,y);}
+  else if(a==='delstaff'){m.staff=m.staff.filter(function(p){return p.id!==id;});save();renderAll();scTo(0,y);}
+  else if(a==='copyprev'){
+    var ks=Object.keys(m.months).filter(function(k){return k<ym;}).sort();
+    if(!ks.length){monMsg('불러올 지난달 기록이 없습니다.');return;}
+    var pv=m.months[ks[ks.length-1]];md.res=JSON.parse(JSON.stringify(pv.res||{}));save();renderAll();scTo(0,y);
+  }
+  else if(a==='confirm'){
+    if(md.confirmed){md.confirmed=false;delete md.staff;}else{md.confirmed=true;md.staff=JSON.parse(JSON.stringify(m.staff));}
+    save();renderAll();scTo(0,y);
+  }
+  else if(a==='print'){
+    try{window.print();monMsg('인쇄 창에서 "PDF로 저장"을 고르세요. 창이 안 열리면 "인쇄용 파일 저장"을 쓰세요.');}catch(err){monMsg('이 화면에서는 인쇄가 막혀 있습니다. "인쇄용 파일 저장"을 쓰세요.');}
+  }
+  else if(a==='savehtml'){
+    var doc='<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>'+ym+' 월간 점검 결과</title><style>body{font-family:Malgun Gothic,sans-serif;margin:0}@page{size:A4;margin:15mm}</style></head><body>'+monReport(ym,true)+'<script>window.onload=function(){setTimeout(function(){window.print();},300);};<\/scr'+'ipt></body></html>';
+    try{var bl=new Blob([doc],{type:'text/html'});var u=URL.createObjectURL(bl);var an=document.createElement('a');an.href=u;an.download=ym+'_월간점검결과.html';document.body.appendChild(an);an.click();setTimeout(function(){document.body.removeChild(an);URL.revokeObjectURL(u);},1500);monMsg('저장했습니다. 파일을 열면 인쇄 창이 뜹니다. 거기서 "PDF로 저장"을 고르세요. 저장이 안 되면 "PDF로 인쇄"를 쓰세요.');}catch(err){monMsg('저장하지 못했습니다. "PDF로 인쇄"를 쓰세요.');}
+  }
+  else if(a==='cpbody'){
+    try{navigator.clipboard.writeText(monBody(ym)).then(function(){monMsg('본문을 복사했습니다.');},function(){monMsg('복사에 실패했습니다. 본문 상자를 직접 선택해 복사하세요.');});}catch(err){monMsg('복사에 실패했습니다. 본문 상자를 직접 선택해 복사하세요.');}
+  }
+  else if(a==='cptable'){
+    var html=monReport(ym,true),txt=monReport(ym,false);
+    try{
+      if(window.ClipboardItem&&navigator.clipboard.write){
+        navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([html],{type:'text/html'}),'text/plain':new Blob([txt],{type:'text/plain'})})]).then(function(){monMsg('표를 복사했습니다. 한글에서 붙여넣기 하세요.');},function(){navigator.clipboard.writeText(txt).then(function(){monMsg('서식 없이 글자로만 복사했습니다. 서식이 필요하면 아래 미리보기를 드래그해서 복사하세요.');},function(){monMsg('복사에 실패했습니다. 아래 미리보기를 드래그해서 복사하세요.');});});
+      }else{navigator.clipboard.writeText(txt).then(function(){monMsg('서식 없이 글자로만 복사했습니다.');},function(){monMsg('복사에 실패했습니다. 아래 미리보기를 드래그해서 복사하세요.');});}
+    }catch(err){monMsg('복사에 실패했습니다. 아래 미리보기를 드래그해서 복사하세요.');}
+  }
+});
+
+/* ---------- 교육청 문의사항 메모 ---------- */
+function qaList(){if(!state.qa)state.qa=[];return state.qa;}
+function todayStr(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
+function renderQA(){
+  var L=qaList(),open=L.filter(function(x){return !x.done;}),done=L.filter(function(x){return x.done;});
+  var h='<div class="eyebrow">교육청 문의</div><h2>교육청에 물어볼 것</h2><p class="lead">궁금한 것이 생길 때마다 적어 두고, 전화나 K에듀파인 쪽지로 물어본 뒤 답변을 적습니다. 답을 받으면 "해결"에 체크하세요.</p>';
+  h+='<section class="blk"><h3>새 문의 적기</h3><textarea id="qaNew" class="url" rows="3" style="width:100%" placeholder="예: 일제정비 기간이 언제인지, 업무용 PC 조치는 올해 어떻게 하는지"></textarea><div class="urlrow" style="margin-top:8px"><button class="btn primary" type="button" data-qa="add">추가</button></div></section>';
+  function card(x){
+    return '<div class="use col"><div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer"><input type="checkbox" data-qc="'+x.id+'"'+(x.done?' checked':'')+' style="width:20px;height:20px;accent-color:var(--accent)"><span><b>'+esc(x.q)+'</b><div class="sm2">'+esc(x.date)+(x.done?' · 해결됨':' · 아직 답을 못 받음')+'</div></span></label><button class="btn" type="button" data-qa="del" data-id="'+x.id+'">삭제</button></div>'
+      +'<textarea class="url" rows="2" data-qt="'+x.id+'" placeholder="답변, 누구에게 물었는지, 전화번호 등 메모" style="width:100%">'+esc(x.a||'')+'</textarea></div>';
+  }
+  h+='<section class="blk"><h3>아직 답을 못 받은 것 <span class="cnt">'+open.length+'</span></h3><div class="uses">'+(open.length?open.map(card).join(''):'<div class="sm2">없습니다.</div>')+'</div></section>';
+  if(done.length)h+='<section class="blk"><h3>해결된 것 <span class="cnt">'+done.length+'</span></h3><div class="uses">'+done.map(card).join('')+'</div></section>';
+  view.innerHTML=h;
+}
+view.addEventListener('change',function(e){
+  var t=e.target,id;
+  if(t.getAttribute&&(id=t.getAttribute('data-qc'))){qaList().forEach(function(x){if(x.id===id)x.done=t.checked;});save();var y=scY();renderAll();scTo(0,y);return;}
+  if(t.getAttribute&&(id=t.getAttribute('data-qt'))){qaList().forEach(function(x){if(x.id===id)x.a=t.value.trim();});save();return;}
+});
+view.addEventListener('click',function(e){
+  var b=e.target.closest&&e.target.closest('[data-qa]');if(!b)return;
+  var a=b.getAttribute('data-qa'),y=scY();
+  if(a==='add'){var v=document.getElementById('qaNew').value.trim();if(!v)return;qaList().unshift({id:'q'+Date.now(),q:v,a:'',date:todayStr(),done:false});save();renderAll();scTo(0,y);}
+  else if(a==='del'){var id=b.getAttribute('data-id');state.qa=qaList().filter(function(x){return x.id!==id;});save();renderAll();scTo(0,y);}
+});
+
+/* ---------- 노트북 등 반출입 대장 ---------- */
+function loanList(){if(!state.loans)state.loans=[];return state.loans;}
+function nowLocal(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)+'T'+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);}
+function fmtDT(v){return String(v||'').replace('T',' ');}
+function loanTable(rows,html){
+  var th='border:1px solid #444;padding:4px 8px;background:#eee;font-weight:bold;',td='border:1px solid #444;padding:4px 8px;';
+  var head=['번호','구분','품명·자산번호','반출자','반출일시','용도·장소','반납일시'];
+  if(!html)return head.join('\t')+'\n'+rows.map(function(r,i){return [i+1,r.kind,r.item,r.who,fmtDT(r.outAt),r.purpose||'',r.inAt?fmtDT(r.inAt):'미반납'].join('\t');}).join('\n');
+  return '<table style="border-collapse:collapse;width:100%"><tr>'+head.map(function(t){return '<th style="'+th+'">'+t+'</th>';}).join('')+'</tr>'
+   +rows.map(function(r,i){return '<tr>'+[i+1,r.kind,r.item,r.who,fmtDT(r.outAt),r.purpose||'',r.inAt?fmtDT(r.inAt):'미반납'].map(function(t){return '<td style="'+td+'">'+esc(t)+'</td>';}).join('')+'</tr>';}).join('')+'</table>';
+}
+function renderLoan(){
+  var L=loanList(),out=L.filter(function(x){return !x.inAt;}),back=L.filter(function(x){return x.inAt;});
+  var h='<div class="eyebrow">반출입 대장</div><h2>노트북, USB 등 반출·반납 기록</h2><p class="lead">반출할 때 누가, 언제, 무엇을 가져가는지 적고, 돌아오면 "반납" 버튼을 누릅니다. 반납 시각은 자동으로 기록됩니다.</p>';
+  h+='<section class="blk"><h3>반출 기록하기</h3><div class="uses"><div class="use col">'
+   +'<div class="urlrow"><select class="url" id="loKind" style="flex:none;width:120px"><option>노트북</option><option>USB</option><option>외장하드</option><option>태블릿</option><option>기타</option></select><input type="text" class="url" id="loItem" placeholder="품명·자산번호(예: 교무실 노트북 123번)"></div>'
+   +'<div class="urlrow"><input type="text" class="url" id="loWho" placeholder="반출하는 사람"><input type="datetime-local" class="url" id="loOut" value="'+nowLocal()+'" style="flex:none;width:210px"></div>'
+   +'<div class="urlrow"><input type="text" class="url" id="loWhy" placeholder="용도·반출 장소(선택, 예: 현장체험학습)"><button class="btn primary" type="button" data-lo="add">반출</button></div></div></div></section>';
+  function card(x){
+    return '<div class="use"><div><span class="tag">'+esc(x.kind)+'</span><b>'+esc(x.item)+'</b><div class="sm2">'+esc(x.who)+' · '+esc(fmtDT(x.outAt))+' 반출'+(x.purpose?' · '+esc(x.purpose):'')+'</div></div><div style="display:flex;gap:6px;flex:none"><button class="btn primary" type="button" data-lo="ret" data-id="'+x.id+'">반납</button><button class="btn" type="button" data-lo="del" data-id="'+x.id+'">삭제</button></div></div>';
+  }
+  h+='<section class="blk"><h3>지금 반출 중 <span class="cnt">'+out.length+'</span></h3><div class="uses">'+(out.length?out.map(card).join(''):'<div class="sm2">반출 중인 것이 없습니다.</div>')+'</div></section>';
+  h+='<section class="blk"><h3>반납 완료 <span class="cnt">'+back.length+'</span></h3><div class="uses">'+(back.length?back.map(function(x){return '<div class="use"><div><span class="tag">'+esc(x.kind)+'</span><b>'+esc(x.item)+'</b><div class="sm2">'+esc(x.who)+' · '+esc(fmtDT(x.outAt))+' 반출 → '+esc(fmtDT(x.inAt))+' 반납'+(x.purpose?' · '+esc(x.purpose):'')+'</div></div><button class="btn" type="button" data-lo="del" data-id="'+x.id+'">삭제</button></div>';}).join(''):'<div class="sm2">아직 없습니다.</div>')+'</div></section>';
+  h+='<section class="blk"><h3>대장 표 복사</h3><div class="urlrow"><button class="btn primary" type="button" data-lo="cp">표 복사(한글에 붙여넣기)</button></div><div class="sm2" id="loMsg" style="margin-top:6px">반출 기록을 모두 표로 복사합니다. 월간 보고서의 "노트북, USB 등 반출·입" 항목에는 해당 달 건수를 적으면 됩니다.</div></section>';
+  view.innerHTML=h;
+}
+view.addEventListener('click',function(e){
+  var b=e.target.closest&&e.target.closest('[data-lo]');if(!b)return;
+  var a=b.getAttribute('data-lo'),id=b.getAttribute('data-id'),y=scY();
+  if(a==='add'){
+    var item=document.getElementById('loItem').value.trim(),who=document.getElementById('loWho').value.trim();
+    if(!item||!who){var m0=document.getElementById('loMsg');if(m0)m0.textContent='품명과 반출하는 사람을 적어 주세요.';return;}
+    loanList().unshift({id:'l'+Date.now(),kind:document.getElementById('loKind').value,item:item,who:who,outAt:document.getElementById('loOut').value||nowLocal(),purpose:document.getElementById('loWhy').value.trim(),inAt:''});
+    save();renderAll();scTo(0,y);
+  }
+  else if(a==='ret'){loanList().forEach(function(x){if(x.id===id)x.inAt=nowLocal();});save();renderAll();scTo(0,y);}
+  else if(a==='del'){state.loans=loanList().filter(function(x){return x.id!==id;});save();renderAll();scTo(0,y);}
+  else if(a==='cp'){
+    var rows=loanList().slice().reverse(),html=loanTable(rows,true),txt=loanTable(rows,false);
+    function msg(t){var e2=document.getElementById('loMsg');if(e2)e2.textContent=t;}
+    try{
+      if(window.ClipboardItem&&navigator.clipboard.write){navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([html],{type:'text/html'}),'text/plain':new Blob([txt],{type:'text/plain'})})]).then(function(){msg('표를 복사했습니다. 한글에서 붙여넣기 하세요.');},function(){navigator.clipboard.writeText(txt).then(function(){msg('글자로만 복사했습니다.');},function(){msg('복사에 실패했습니다.');});});}
+      else navigator.clipboard.writeText(txt).then(function(){msg('글자로만 복사했습니다.');},function(){msg('복사에 실패했습니다.');});
+    }catch(err){msg('복사에 실패했습니다.');}
+  }
+});
+
+/* ---------- 항목별 사진·PDF 첨부 ---------- */
+var ATT={'plan.t4':'수탁자 점검표, 서명받은 교육 자료(보안서약서, 교육 확인서 등)','plan.t5':'서명받은 서약서(직원, 유지보수 업체)','plan.t7':'연수 등록부, 교육 자료'};
+function attList(k){if(!state.att)state.att={};if(!state.att[k])state.att[k]=[];return state.att[k];}
+var EDUDOC=['수탁자(업체) 개인정보 보호 교육 자료 (인쇄용 PDF, 행정실에서 사용)','edu/suitak_edu.pdf'];
+var DOCS={'plan.t4':[EDUDOC],'m8.t4':[EDUDOC]};
+function attBlock(k){
+  if(!ATT[k]&&!DOCS[k])return '';
+  var L=attList(k);
+  var dl=(DOCS[k]||[]).map(function(d){return '<div class="sm2" style="margin-bottom:6px">양식: <a href="#" data-edu="1">'+esc(d[0])+'</a></div>';}).join('');
+  if(!ATT[k])return '<div class="att">'+dl+'</div>';
+  var h='<div class="att">'+dl+'<div class="sm2">첨부: '+esc(ATT[k])+' (사진, PDF)</div>';
+  if(L.length){h+='<ul class="files">'+L.map(function(f){
+    var isImg=/^image\//.test(f.ct||'');
+    return '<li>'+(isImg?'<a href="#" data-fid="'+esc(f.id)+'"><img data-thumb="'+esc(f.id)+'" alt="" class="thumb"></a>':'')+'<a href="#" data-fid="'+esc(f.id)+'">'+esc(f.name)+'</a> <span class="sm2">'+esc(f.date||'')+'</span> <button class="btn" type="button" data-attdel="'+esc(k)+'" data-id="'+esc(f.id)+'">삭제</button></li>';}).join('')+'</ul>';}
+  h+='<label class="btn upl">파일 올리기<input type="file" accept="image/*,application/pdf" multiple data-up="'+esc(k)+'" style="display:none"></label> <span class="sm2" data-upmsg="'+esc(k)+'">'+(L.length?L.length+'개 올림':'아직 올린 파일이 없습니다')+'</span></div>';
+  return h;
+}
+view.addEventListener('change',function(e){
+  var t=e.target,k=t.getAttribute&&t.getAttribute('data-up');if(!k)return;
+  var files=[].slice.call(t.files||[]);if(!files.length)return;
+  var msgEl=view.querySelector('[data-upmsg="'+k+'"]');
+  function msg(s){if(msgEl)msgEl.textContent=s;}
+  if(!window.fileUp){msg('로그인 후 올릴 수 있습니다.');return;}
+  msg('올리는 중...');
+  var n=0,fail=0;
+  files.reduce(function(p,f){return p.then(function(){
+    if(f.size>10*1024*1024){fail++;return;}
+    return fileUp(f).then(function(r){attList(k).push({id:r.id,url:'',ct:r.ct||f.type,name:f.name,date:todayStr()});n++;},function(){fail++;});
+  });},Promise.resolve()).then(function(){save();var y=scY();renderAll();scTo(0,y);var m2=view.querySelector('[data-upmsg="'+k+'"]');if(m2)m2.textContent=n+'개 올림'+(fail?', '+fail+'개 실패(10MB 이하만 가능)':'');});
+});
+view.addEventListener('click',function(e){
+  var b=e.target.closest&&e.target.closest('[data-attdel]');if(!b)return;
+  var k=b.getAttribute('data-attdel'),id=b.getAttribute('data-id'),y=scY();
+  state.att[k]=attList(k).filter(function(f){return f.id!==id;});save();
+  try{if(window.fileDel)fileDel(id);}catch(err){}
+  renderAll();scTo(0,y);
+});
+
+var _ra=renderAll;renderAll=function(){_ra.apply(null,arguments);if(window.hydrateFiles)hydrateFiles();};
+STEPS=MODES[state.mode].steps;
+if(state.cur<0||state.cur>=STEPS.length||!unlockedStrict(state.cur))state.cur=0;
+renderAll();
+
+/* ---------- 로그인, 서버 저장(Apps Script) ---------- */
+function gs(fn){var a=[].slice.call(arguments,1);return new Promise(function(res,rej){
+  if(!(window.google&&google.script&&google.script.run)){rej(new Error('noserver'));return;}
+  var r=google.script.run.withSuccessHandler(res).withFailureHandler(rej);r[fn].apply(r,a);});}
+(function(){
+  var el=function(i){return document.getElementById(i);};
+  var SHARED=['checks','free','urls','info','custom','qa','loans','att','fld','mon'];
+  var mode='pick',role=null,roster=[],sess=null,loaded=false,rev=0,sent={},timer=null,pushing=false,urls={};
+  function msg(t,ok){var m=el('lockMsg');m.textContent=t||'';m.className=ok?'ok':'';}
+  function expired(e){return /expired/.test(String((e&&e.message)||e));}
+  function stat(t,bad){var s=el('sync');if(!s)return;s.textContent=t;s.className='sm2 sync'+(bad?' bad':'');}
+  function setUI(m){
+    mode=m;document.body.classList.add('locked');
+    var pick=(m==='pick'),pw=(m==='pw'),setup=(m==='setup'||m==='change');
+    el('roleBtns').style.display=pick?'flex':'none';
+    el('lockForm').style.display=pick?'none':'block';
+    el('nm').style.display=setup?'block':'none';
+    el('pw2').style.display=setup?'block':'none';
+    el('pw1').style.display='block';
+    el('lockBack').style.display=(pw||m==='setup')?'block':'none';
+    el('lockCancel').style.display=(m==='change')?'block':'none';
+    el('pw1').value='';el('pw2').value='';
+    el('pw1').placeholder=setup?'새 암호(4자 이상)':'암호';
+    el('pw2').placeholder='새 암호 한 번 더';
+    el('lockBtn').textContent=setup?'저장하고 들어가기':'들어가기';
+    var sub={pick:'누구로 들어가시나요?',pw:(role?labelOf(role):'')+' 암호를 입력하세요',setup:'처음 접속입니다. 이름과 새 암호를 정해 주세요(6120은 사용할 수 없습니다)',change:'이름과 암호를 바꿉니다'}[m];
+    el('lockSub').textContent=sub;
+    try{(setup?el('nm'):el('pw1')).focus();}catch(e){}
+  }
+  function labelOf(r){for(var i=0;i<roster.length;i++)if(roster[i].role===r)return roster[i].label+(roster[i].name&&roster[i].name!==roster[i].label?'('+roster[i].name+')':'');return r;}
+  function drawRoster(){
+    el('roleBtns').innerHTML=roster.map(function(r){return '<button type="button" class="btn rolebtn" data-role="'+r.role+'"><b>'+esc(r.label)+'</b>'+(r.name&&r.name!==r.label?'<span>'+esc(r.name)+'</span>':'')+(r.first?'<span class="sm2">처음 접속 전</span>':'')+'</button>';}).join('');
+  }
+  function loadRoster(){
+    msg('불러오는 중...');
+    gs('getRoster').then(function(r){roster=r;drawRoster();msg('');setUI('pick');}).catch(function(e){
+      msg(e&&e.message==='noserver'?'이 화면은 Apps Script 웹앱으로 열어야 로그인됩니다.':'서버에 연결하지 못했습니다. 잠시 뒤 새로고침하세요.');});
+  }
+  el('roleBtns').addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-role]');if(!b)return;role=b.getAttribute('data-role');msg('');setUI('pw');});
+  el('lockBack').addEventListener('click',function(){msg('');setUI('pick');});
+  el('lockCancel').addEventListener('click',function(){if(sess){msg('');document.body.classList.remove('locked');}});
+  el('lockForm').addEventListener('submit',function(e){
+    e.preventDefault();var v=el('pw1').value;
+    if(mode==='pw'){
+      if(!v)return msg('암호를 입력하세요');
+      msg('확인 중...');
+      gs('login',role,v).then(function(r){
+        if(r.err){msg(r.err);el('pw1').value='';return;}
+        sess={token:r.token,role:r.role,name:r.name,label:r.label};
+        if(r.first){el('nm').value=(r.name===r.label?'':r.name);setUI('setup');msg('');}
+        else enter();
+      }).catch(function(){msg('서버에 연결하지 못했습니다.');});
+    }else{
+      var nm=el('nm').value.trim();
+      if(!nm)return msg('이름을 적어 주세요');
+      if(v.length<4)return msg('암호는 4자 이상으로 정해 주세요');
+      if(v==='6120')return msg('6120은 새 암호로 쓸 수 없습니다');
+      if(v!==el('pw2').value)return msg('두 칸이 서로 다릅니다');
+      msg('저장 중...');
+      gs('setCredentials',sess.token,nm,v).then(function(r){
+        if(r.err){msg(r.err);return;}
+        sess.name=r.name;
+        if(mode==='change'){document.body.classList.remove('locked');showWho();msg('');}
+        else enter();
+      }).catch(function(e){if(expired(e))relogin();else msg('저장하지 못했습니다.');});
+    }
+  });
+  function showWho(){el('who').textContent=sess.label+(sess.name&&sess.name!==sess.label?' · '+sess.name:'');}
+  function relogin(note){document.body.classList.add('locked');role=sess?sess.role:null;sess=null;loadRoster();setTimeout(function(){msg(note||'접속이 끝났습니다. 다시 로그인하세요');},400);}
+  function ser(k){return JSON.stringify(state[k]);}
+  function apply(resp,initial){
+    var d=resp.data||{},changed=false;
+    if(initial){
+      DEFVAL=resp.defval||{};
+      var dev={cur:state.cur,mode:state.mode,curs:state.curs||{}};
+      state={checks:{},cur:0,free:false,urls:{},info:{},custom:[],mode:dev.mode,curs:dev.curs};
+      SHARED.forEach(function(k){
+        sent[k]=d[k];
+        if(d[k]!==undefined){try{var v=JSON.parse(d[k]);if(v!==null)state[k]=v;}catch(e){}}
+      });
+      if(!state.mon)state.mon=null;
+      changed=true;
+    }else{
+      SHARED.forEach(function(k){
+        if(d[k]===undefined||d[k]===sent[k])return;
+        var local=(state[k]===undefined)?undefined:ser(k);
+        if(local===sent[k]){try{var v=JSON.parse(d[k]);if(v!==null)state[k]=v;sent[k]=d[k];changed=true;}catch(e){}}
+      });
+    }
+    rev=resp.rev||0;return changed;
+  }
+  function enter(){
+    msg('불러오는 중...');
+    gs('loadState',sess.token).then(function(resp){
+      if(!loaded){
+        apply(resp,true);loaded=true;
+        STEPS=MODES[state.mode].steps;
+        if(state.cur<0||state.cur>=STEPS.length||!unlockedStrict(state.cur))state.cur=0;
+      }else{apply(resp,false);}
+      document.getElementById('reset').style.display=(sess.role==='head')?'':'none';
+      el('adm_open').style.display=(sess.role==='head')?'':'none';
+      showWho();msg('');document.body.classList.remove('locked');
+      renderAll();scTo(0,0);stat('저장됨');
+      SYNC.dirty();SYNC.start();
+    }).catch(function(e){if(expired(e))relogin();else msg('불러오지 못했습니다. 다시 시도하세요.');});
+  }
+  var SYNC=window.SYNC={
+    dirty:function(){if(!sess||!loaded)return;stat('저장 중...');clearTimeout(timer);timer=setTimeout(SYNC.push,1500);},
+    push:function(){
+      if(!sess||!loaded||pushing)return;clearTimeout(timer);timer=null;
+      var ch={},any=false;
+      SHARED.forEach(function(k){if(state[k]===undefined)return;var s=ser(k);if(s!==sent[k]){ch[k]=s;any=true;}});
+      if(!any){stat('저장됨');return;}
+      pushing=true;
+      gs('saveKeys',sess.token,ch,rev).then(function(r){
+        Object.keys(ch).forEach(function(k){sent[k]=ch[k];});rev=r.rev;pushing=false;
+        stat('저장됨');
+        if(r.behind)SYNC.pull();
+        SHARED.forEach(function(k){if(state[k]!==undefined&&ser(k)!==sent[k])SYNC.dirty();});
+      }).catch(function(e){pushing=false;if(expired(e)){relogin('접속이 끝났습니다. 다시 로그인하면 입력한 내용이 저장됩니다');}else{stat('저장 실패, 다시 시도 중',true);timer=setTimeout(SYNC.push,6000);}});
+    },
+    pull:function(){
+      if(!sess||!loaded||pushing||timer)return;
+      var a=document.activeElement;if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&el('view').contains(a))return;
+      gs('loadState',sess.token).then(function(resp){
+        if(apply(resp,false)){var y=scY();renderAll();scTo(0,y);}
+      }).catch(function(e){if(expired(e))relogin();});
+    },
+    start:function(){
+      if(SYNC._t)return;
+      SYNC._t=setInterval(function(){
+        if(!sess||!loaded||document.hidden||pushing||timer)return;
+        gs('getRev',sess.token).then(function(r){if(r.rev>rev)SYNC.pull();}).catch(function(e){if(expired(e))relogin();});
+      },15000);
+    }
+  };
+  document.addEventListener('visibilitychange',function(){if(document.hidden)SYNC.push();else if(sess&&loaded)SYNC.pull();});
+  window.addEventListener('pagehide',function(){SYNC.push();});
+  /* 파일 */
+  window.fileUp=function(f){return new Promise(function(res,rej){
+    if(!sess){rej();return;}
+    var fr=new FileReader();
+    fr.onload=function(){var b64=String(fr.result).split(',')[1]||'';
+      gs('uploadFile',sess.token,f.name,f.type||'application/octet-stream',b64).then(function(r){r.err?rej(new Error(r.err)):res(r);},rej);};
+    fr.onerror=rej;fr.readAsDataURL(f);});};
+  window.fileDel=function(id){if(sess)gs('deleteFile',sess.token,id).catch(function(){});};
+  function toBlob(b64,ct){var bin=atob(b64),n=bin.length,u=new Uint8Array(n);for(var i=0;i<n;i++)u[i]=bin.charCodeAt(i);return new Blob([u],{type:ct||'application/octet-stream'});}
+  function getUrl(id){
+    if(urls[id])return Promise.resolve(urls[id]);
+    return gs('getFile',sess.token,id).then(function(r){if(r.err)throw new Error(r.err);urls[id]={url:URL.createObjectURL(toBlob(r.b64,r.ct)),name:r.name,ct:r.ct};return urls[id];});}
+  function openBlobUrl(o,name){
+    var w=null;try{w=window.open(o.url,'_blank');}catch(e){}
+    if(!w){var a=document.createElement('a');a.href=o.url;a.download=name||o.name||'file';document.body.appendChild(a);a.click();document.body.removeChild(a);}
+  }
+  window.hydrateFiles=function(){
+    if(!sess)return;
+    [].forEach.call(document.querySelectorAll('img[data-thumb]'),function(im){
+      var id=im.getAttribute('data-thumb');if(im.getAttribute('data-ok'))return;im.setAttribute('data-ok','1');
+      getUrl(id).then(function(o){im.src=o.url;}).catch(function(){im.alt='(미리보기 없음)';});});
+  };
+  document.addEventListener('click',function(e){
+    var f=e.target.closest&&e.target.closest('[data-fid]');
+    if(f){e.preventDefault();var id=f.getAttribute('data-fid');getUrl(id).then(function(o){openBlobUrl(o,f.textContent);}).catch(function(){});return;}
+    var d=e.target.closest&&e.target.closest('[data-edu]');
+    if(d&&sess){e.preventDefault();
+      if(urls.edu){openBlobUrl(urls.edu,'수탁자_개인정보_보호_교육자료.pdf');return;}
+      gs('getEdu',sess.token).then(function(r){urls.edu={url:URL.createObjectURL(toBlob(r.b64,r.ct)),name:r.name};openBlobUrl(urls.edu,r.name);}).catch(function(){});}
+  });
+  /* 내 이름·암호 변경, 로그아웃 */
+  el('chgpw').addEventListener('click',function(){if(!sess)return;el('nm').value=sess.name||'';setUI('change');msg('');});
+  el('dolock').addEventListener('click',function(){SYNC.push();sess=null;loaded=loaded;role=null;urls={};loadRoster();});
+  /* 정보부장: 담당자 관리 */
+  function fmt(t){var d=new Date(t);return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
+  function admMsg(t){el('admMsg').textContent=t||'';}
+  function admDraw(){
+    gs('adminList',sess.token).then(function(r){
+      var h='<table class="admt"><tr><th>구분</th><th>이름</th><th>암호 변경일</th><th>상태</th><th></th></tr>';
+      r.roles.forEach(function(x){
+        var old=x.days>=365;
+        h+='<tr><td>'+esc(x.label)+'</td><td>'+esc(x.name)+'</td><td>'+fmt(x.changed)+' ('+x.days+'일 전)'+(old&&x.role!=='head'?' <b class="warnb">1년 경과</b>':'')+'</td><td>'+(x.first?'첫 접속 대기':'사용 중')+'</td><td>'+(x.role==='head'?'':'<button class="btn sm" type="button" data-admreset="'+x.role+'">초기화</button>')+'</td></tr>';
+      });
+      h+='</table>';
+      h+='<h3>최근 저장 기록</h3><ul class="sm2">'+(r.log.length?r.log.map(function(l){return '<li>'+fmt(l.at)+' '+new Date(l.at).toTimeString().slice(0,5)+' '+esc(l.by)+' · '+esc((l.keys||[]).join(', '))+'</li>';}).join(''):'<li>아직 없습니다</li>')+'</ul>';
+      el('admBody').innerHTML=h;
+    }).catch(function(e){if(expired(e)){el('adm').hidden=true;relogin();}else admMsg('불러오지 못했습니다');});
+  }
+  el('adm_open').addEventListener('click',function(){el('adm').hidden=false;admMsg('');admDraw();});
+  el('admClose').addEventListener('click',function(){el('adm').hidden=true;});
+  el('admBody').addEventListener('click',function(e){
+    var b=e.target.closest&&e.target.closest('[data-admreset]');if(!b)return;
+    if(b.getAttribute('data-arm')!=='1'){b.setAttribute('data-arm','1');b.textContent='이름과 암호가 지워집니다. 한 번 더';setTimeout(function(){b.removeAttribute('data-arm');b.textContent='초기화';},4000);return;}
+    gs('adminReset',sess.token,b.getAttribute('data-admreset')).then(function(r){admMsg(r.err||'초기화했습니다. 암호는 6120이고, 첫 접속 때 이름과 새 암호를 정하게 됩니다');admDraw();}).catch(function(){admMsg('초기화하지 못했습니다');});
+  });
+  el('impGo').addEventListener('click',function(){
+    var t=el('impTxt').value.trim();if(!t)return admMsg('붙여넣은 내용이 없습니다');
+    if(el('impGo').getAttribute('data-arm')!=='1'){el('impGo').setAttribute('data-arm','1');el('impGo').textContent='서버 내용이 덮어써집니다. 한 번 더';setTimeout(function(){el('impGo').removeAttribute('data-arm');el('impGo').textContent='가져오기';},4000);return;}
+    el('impGo').removeAttribute('data-arm');el('impGo').textContent='가져오기';
+    gs('importState',sess.token,t).then(function(r){
+      if(r.err)return admMsg(r.err);
+      admMsg(r.n+'개 항목을 가져왔습니다. 화면을 새로 불러옵니다');
+      gs('loadState',sess.token).then(function(resp){SHARED.forEach(function(k){delete state[k];});state.checks={};apply(resp,true);var y=scY();renderAll();scTo(0,y);});
+    }).catch(function(){admMsg('가져오지 못했습니다');});
+  });
+  loadRoster();
+})();
+
+</script>
+</body>
+</html>
