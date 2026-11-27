@@ -134,7 +134,7 @@ body.monthly .ctrl,body.monthly #reset{visibility:hidden}body.monthly .mnav{disp
 select.url{padding:6px 8px}
 .gbox{margin:10px 0;border:1px solid var(--line);border-radius:10px;overflow:hidden}.gtitle{background:var(--accent-soft);color:var(--accent);font-weight:700;padding:6px 12px}
 table.gt{width:100%;border-collapse:collapse;font-size:14px}table.gt th{text-align:left;background:var(--paper);padding:6px 10px;border-bottom:1px solid var(--line);font-size:13px;color:var(--muted)}table.gt td{padding:6px 10px;border-bottom:1px solid var(--line);vertical-align:top}table.gt input{width:100%}
-@media print{@page{size:A4;margin:15mm}body *{visibility:hidden!important}#monPrev,#monPrev *{visibility:visible!important}#monPrev{position:absolute;left:0;top:0;width:100%;border:0!important;padding:0!important;background:#fff}#monPrev tr{page-break-inside:avoid}#monPrev thead{display:table-header-group}}
+@media print{@page{size:A4;margin:15mm}body.pm :not(.keep):not(#monPrev *){display:none!important}body.pm .keep{display:block!important;height:auto!important;overflow:visible!important;position:static!important;padding:0!important;margin:0!important;border:0!important;width:auto!important;max-width:none!important}#monPrev{position:static!important;width:100%;border:0!important;padding:0!important;background:#fff}#monPrev tr{page-break-inside:avoid}#monPrev thead{display:table-header-group}}
 
 .att{margin:6px 0 6px 32px;padding:8px 12px;border:1px dashed var(--line);border-radius:8px}
 .files{list-style:none;margin:6px 0;padding:0;display:grid;gap:6px}.files li{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.thumb{width:56px;height:56px;object-fit:cover;border-radius:6px;border:1px solid var(--line)}.upl{cursor:pointer;display:inline-block}
@@ -1256,7 +1256,7 @@ view.addEventListener('click',function(e){
     save();renderAll();scTo(0,y);
   }
   else if(a==='print'){
-    try{var oT=document.title;document.title=monFile(ym);var rT=function(){document.title=oT;window.removeEventListener('afterprint',rT);};window.addEventListener('afterprint',rT);setTimeout(rT,60000);window.print();monMsg('인쇄 창에서 "PDF로 저장"을 고르세요(파일 이름은 자동으로 정해집니다. 위·아래 작은 글씨를 없애려면 "머리글 및 바닥글"을 끄세요). 창이 안 열리면 "인쇄용 파일 저장"을 쓰세요.');}catch(err){monMsg('이 화면에서는 인쇄가 막혀 있습니다. "인쇄용 파일 저장"을 쓰세요.');}
+    try{var oT=document.title;document.title=monFile(ym);var pv=document.getElementById('monPrev'),ks=[];for(var a=pv;a&&a!==document.body&&a!==document.documentElement;a=a.parentElement){a.classList.add('keep');ks.push(a);}document.body.classList.add('pm');var rT=function(){document.title=oT;document.body.classList.remove('pm');ks.forEach(function(x){x.classList.remove('keep');});window.removeEventListener('afterprint',rT);};window.addEventListener('afterprint',rT);setTimeout(rT,60000);window.print();monMsg('인쇄 창에서 "PDF로 저장"을 고르세요(파일 이름은 자동으로 정해집니다. 위·아래 작은 글씨를 없애려면 "머리글 및 바닥글"을 끄세요). 창이 안 열리면 "인쇄용 파일 저장"을 쓰세요.');}catch(err){monMsg('이 화면에서는 인쇄가 막혀 있습니다. "인쇄용 파일 저장"을 쓰세요.');}
   }
   else if(a==='savehtml'){
     var doc='<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>'+monFile(ym)+'</title><style>body{font-family:Malgun Gothic,sans-serif;margin:0}@page{size:A4;margin:15mm}</style></head><body>'+monReport(ym,true)+'<script>window.onload=function(){setTimeout(function(){window.print();},300);};<\/scr'+'ipt></body></html>';
