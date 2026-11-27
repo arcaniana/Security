@@ -1434,7 +1434,7 @@ function gs(fn){var a=[].slice.call(arguments,1);return new Promise(function(res
   }
   function loadRoster(){
     msg('불러오는 중...');
-    gs('getRoster').then(function(r){roster=r;drawRoster();msg('');setUI('pick');}).catch(function(e){
+    gs('getRoster').then(function(r){roster=r;drawRoster();msg('');var last=null;try{last=localStorage.getItem('suip_lastrole');}catch(e){}var ok=false;if(last)for(var i=0;i<roster.length;i++)if(roster[i].role===last)ok=true;if(ok){role=last;setUI('pw');}else setUI('pick');}).catch(function(e){
       msg('서버에 연결하지 못했습니다. 잠시 뒤 새로고침하세요.');});
   }
   el('roleBtns').addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-role]');if(!b)return;role=b.getAttribute('data-role');msg('');setUI('pw');});
@@ -1447,7 +1447,7 @@ function gs(fn){var a=[].slice.call(arguments,1);return new Promise(function(res
       msg('확인 중...');
       gs('login',role,v).then(function(r){
         if(r.err){msg(r.err);el('pw1').value='';return;}
-        sess={token:r.token,role:r.role,name:r.name,label:r.label};
+        sess={token:r.token,role:r.role,name:r.name,label:r.label};try{localStorage.setItem('suip_lastrole',r.role);}catch(e){}
         if(r.first){el('nm').value=(r.name===r.label?'':r.name);setUI('setup');msg('');}
         else enter();
       }).catch(function(){msg('서버에 연결하지 못했습니다.');});
