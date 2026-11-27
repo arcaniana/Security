@@ -137,7 +137,7 @@ table.gt{width:100%;border-collapse:collapse;font-size:14px}table.gt th{text-ali
 @media print{@page{size:A4;margin:15mm}body.pm :not(.keep):not(#monPrev *){display:none!important}body.pm .keep{display:block!important;height:auto!important;overflow:visible!important;position:static!important;padding:0!important;margin:0!important;border:0!important;width:auto!important;max-width:none!important}#monPrev{position:static!important;width:100%;border:0!important;padding:0!important;background:#fff}#monPrev tr{page-break-inside:avoid}#monPrev thead{display:table-header-group}}
 
 .att{margin:6px 0 6px 32px;padding:8px 12px;border:1px dashed var(--line);border-radius:8px}
-.files{list-style:none;margin:6px 0;padding:0;display:grid;gap:6px}.files li{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.thumb{width:56px;height:56px;object-fit:cover;border-radius:6px;border:1px solid var(--line)}.upl{cursor:pointer;display:inline-block}
+.files{list-style:none;margin:6px 0;padding:0;display:grid;gap:6px}.files li{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.thumb{width:56px;height:56px;object-fit:cover;border-radius:6px;border:1px solid var(--line)}.upl{cursor:pointer;display:inline-block}.lnkrow{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px}
 body.locked header.top,body.locked main{display:none}
 #lock{display:none;min-height:100vh;align-items:center;justify-content:center;padding:24px}
 body.locked #lock{display:flex}
@@ -1354,16 +1354,62 @@ var ATT={'plan.t4':'수탁자 점검표, 서명받은 교육 자료(보안서약
 function attList(k){if(!state.att)state.att={};if(!state.att[k])state.att[k]=[];return state.att[k];}
 var EDUDOC=['수탁자(업체) 개인정보 보호 교육 자료 (인쇄용 PDF, 행정실에서 사용)','edu/suitak_edu.pdf'];
 var DOCS={'plan.t4':[EDUDOC],'m8.t4':[EDUDOC]};
+/* ---------- 드라이브 링크, 내 PC 폴더 연결 ---------- */
+function linkLi(f,k){return '<li>🔗 <a href="'+esc(f.link)+'" target="_blank" rel="noopener">'+esc(f.name)+'</a> <span class="sm2">'+esc(f.date||'')+' · 드라이브 링크</span> <button class="btn" type="button" data-attdel="'+esc(k)+'" data-id="'+esc(f.id)+'">삭제</button></li>';}
+function lnkBlock(k){
+  return '<div class="lnkrow" data-lnkrow="'+esc(k)+'"><input type="text" class="url" data-lnkname placeholder="이름(선택)" style="max-width:160px"> <input type="text" class="url" data-lnkurl placeholder="구글 드라이브 링크 붙여넣기" style="flex:1;min-width:180px"> <button class="btn" type="button" data-lnkadd="'+esc(k)+'">링크 추가</button> <span class="sm2" data-lnkmsg></span></div>';
+}
+var PCF={h:null,name:'',last:{},ok:!!(window.showDirectoryPicker)};
+function pcDb(){return new Promise(function(res,rej){try{var r=indexedDB.open('suip_pc',1);r.onupgradeneeded=function(){r.result.createObjectStore('h');};r.onsuccess=function(){res(r.result);};r.onerror=function(){rej(r.error);};}catch(e){rej(e);}});}
+function pcGet(){return pcDb().then(function(db){return new Promise(function(res){var q=db.transaction('h').objectStore('h').get('dir');q.onsuccess=function(){res(q.result||null);};q.onerror=function(){res(null);};});}).catch(function(){return null;});}
+function pcPut(h){return pcDb().then(function(db){return new Promise(function(res){var t=db.transaction('h','readwrite');t.objectStore('h').put(h,'dir');t.oncomplete=function(){res();};t.onerror=function(){res();};});}).catch(function(){});}
+function pcLine(k){
+  if(!PCF.ok)return '<div class="sm2" style="margin-top:6px">내 PC 폴더 연결은 크롬·엣지에서 쓸 수 있습니다.</div>';
+  return '<div class="sm2 pcl" style="margin-top:6px">'+(PCF.h?'내 PC 폴더: <b>'+esc(PCF.name)+'</b> (올릴 때 사본도 저장) ':'내 PC 폴더: 연결 안 됨 ')+'<button class="btn" type="button" data-pcconn="1">'+(PCF.h?'폴더 바꾸기':'내 PC 폴더 연결')+'</button>'+(PCF.h?' <button class="btn" type="button" data-pcoff="1">연결 해제</button>':'')+(PCF.last[k]?' <span data-pcmsg="'+esc(k)+'">'+esc(PCF.last[k])+'</span>':'')+'</div>';
+}
+function pcSafe(n){return String(n).replace(/[\\\/:*?"<>|]/g,'_').replace(/\s+/g,' ').trim().slice(0,60)||'증빙';}
+function pcSaveAll(k,files){
+  if(!PCF.h)return Promise.resolve(0);
+  var sid=k.split('.')[0],stp=MODES.audit.steps.concat(MODES.manual.steps).filter(function(x){return x.id===sid;})[0];var sub=pcSafe(stp?(sid.toUpperCase()+' '+stp.title):(k+' '+(ATT[k]||'')));
+  return Promise.resolve(PCF.h.queryPermission?PCF.h.queryPermission({mode:'readwrite'}):'granted').then(function(p){
+    return p==='granted'?p:(PCF.h.requestPermission?PCF.h.requestPermission({mode:'readwrite'}):'denied');
+  }).then(function(p){
+    if(p!=='granted'){PCF.last[k]='PC 폴더 저장 권한이 없어 사본은 저장하지 못했습니다';return 0;}
+    return PCF.h.getDirectoryHandle(sub,{create:true}).then(function(d){
+      var n=0;return files.reduce(function(q,f){return q.then(function(){
+        return d.getFileHandle(f.name,{create:true}).then(function(fh){return fh.createWritable();}).then(function(w){return w.write(f).then(function(){return w.close();});}).then(function(){n++;});
+      });},Promise.resolve()).then(function(){PCF.last[k]='PC 폴더에 사본 '+n+'개를 저장했습니다 ('+sub+')';return n;});
+    });
+  }).catch(function(){PCF.last[k]='PC 폴더에 저장하지 못했습니다. 폴더를 다시 연결해 보세요';return 0;}).then(function(n){
+    var m=view.querySelector('[data-pcmsg="'+k+'"]');if(m)m.textContent=PCF.last[k];return n;});
+}
+function pcRefresh(){var y=scY();renderAll();scTo(0,y);}
+if(PCF.ok){pcGet().then(function(h){if(h){PCF.h=h;PCF.name=h.name||'';pcRefresh();}});}
+view.addEventListener('click',function(e){
+  var t=e.target.closest&&e.target.closest('[data-pcconn],[data-pcoff],[data-lnkadd]');if(!t)return;
+  if(t.hasAttribute('data-pcconn')){
+    window.showDirectoryPicker({mode:'readwrite'}).then(function(h){PCF.h=h;PCF.name=h.name||'';return pcPut(h);}).then(pcRefresh).catch(function(){});
+  }else if(t.hasAttribute('data-pcoff')){
+    PCF.h=null;PCF.name='';pcPut(null).then(pcRefresh);
+  }else{
+    var k=t.getAttribute('data-lnkadd'),row=t.closest('[data-lnkrow]');if(!row)return;
+    var nm=row.querySelector('[data-lnkname]').value.trim(),u=row.querySelector('[data-lnkurl]').value.trim();
+    if(!/^https?:\/\//i.test(u)){var mg=row.querySelector('[data-lnkmsg]');if(mg)mg.textContent='https://로 시작하는 링크를 붙여 넣어 주세요';return;}
+    attList(k).push({id:'L'+Date.now().toString(36),link:u,ct:'',name:nm||'드라이브 링크',date:todayStr(),kind:'link'});save();pcRefresh();
+  }
+});
 function attBlock(k){
-  if(!ATT[k]&&!DOCS[k])return '';
+  var isEv=/^d\d+\.e\d+$/.test(k);
+  if(!ATT[k]&&!DOCS[k]&&!isEv)return '';
   var L=attList(k);
   var dl=(DOCS[k]||[]).map(function(d){return '<div class="sm2" style="margin-bottom:6px">양식: <a href="#" data-edu="1">'+esc(d[0])+'</a></div>';}).join('');
-  if(!ATT[k])return '<div class="att">'+dl+'</div>';
-  var h='<div class="att">'+dl+'<div class="sm2">첨부: '+esc(ATT[k])+' (사진, PDF)</div>';
+  if(!ATT[k]&&!isEv)return '<div class="att">'+dl+'</div>';
+  var h='<div class="att">'+dl+'<div class="sm2">'+(ATT[k]?'첨부: '+esc(ATT[k])+' (사진, PDF)':'증빙 파일 모아 두기 (사진, PDF)')+'</div>';
   if(L.length){h+='<ul class="files">'+L.map(function(f){
     var isImg=/^image\//.test(f.ct||'');
+    if(f.link)return linkLi(f,k);
     return '<li>'+(isImg?'<a href="#" data-fid="'+esc(f.id)+'"><img data-thumb="'+esc(f.id)+'" alt="" class="thumb"></a>':'')+'<a href="#" data-fid="'+esc(f.id)+'">'+esc(f.name)+'</a> <span class="sm2">'+esc(f.date||'')+'</span> <button class="btn" type="button" data-attdel="'+esc(k)+'" data-id="'+esc(f.id)+'">삭제</button></li>';}).join('')+'</ul>';}
-  h+='<label class="btn upl">파일 올리기<input type="file" accept="image/*,application/pdf" multiple data-up="'+esc(k)+'" style="display:none"></label> <span class="sm2" data-upmsg="'+esc(k)+'">'+(L.length?L.length+'개 올림':'아직 올린 파일이 없습니다')+'</span></div>';
+  h+='<label class="btn upl">파일 올리기<input type="file" accept="image/*,application/pdf" multiple data-up="'+esc(k)+'" style="display:none"></label> <span class="sm2" data-upmsg="'+esc(k)+'">'+(L.length?L.length+'개 올림':'아직 올린 파일이 없습니다')+'</span>'+lnkBlock(k)+pcLine(k)+'</div>';
   return h;
 }
 view.addEventListener('change',function(e){
@@ -1371,6 +1417,7 @@ view.addEventListener('change',function(e){
   var files=[].slice.call(t.files||[]);if(!files.length)return;
   var msgEl=view.querySelector('[data-upmsg="'+k+'"]');
   function msg(s){if(msgEl)msgEl.textContent=s;}
+  pcSaveAll(k,files);
   if(!window.fileUp){msg('로그인 후 올릴 수 있습니다.');return;}
   msg('올리는 중...');
   var n=0,fail=0;
