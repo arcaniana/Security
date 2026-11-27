@@ -134,7 +134,7 @@ body.monthly .ctrl,body.monthly #reset{visibility:hidden}body.monthly .mnav{disp
 select.url{padding:6px 8px}
 .gbox{margin:10px 0;border:1px solid var(--line);border-radius:10px;overflow:hidden}.gtitle{background:var(--accent-soft);color:var(--accent);font-weight:700;padding:6px 12px}
 table.gt{width:100%;border-collapse:collapse;font-size:14px}table.gt th{text-align:left;background:var(--paper);padding:6px 10px;border-bottom:1px solid var(--line);font-size:13px;color:var(--muted)}table.gt td{padding:6px 10px;border-bottom:1px solid var(--line);vertical-align:top}table.gt input{width:100%}
-@media print{@page{size:A4;margin:15mm}body *{visibility:hidden!important}#monPrev,#monPrev *{visibility:visible!important}#monPrev{position:absolute;left:0;top:0;width:100%;border:0!important;padding:0!important;background:#fff}}
+@media print{@page{size:A4;margin:15mm}body *{visibility:hidden!important}#monPrev,#monPrev *{visibility:visible!important}#monPrev{position:absolute;left:0;top:0;width:100%;border:0!important;padding:0!important;background:#fff}#monPrev tr{page-break-inside:avoid}#monPrev thead{display:table-header-group}}
 
 .att{margin:6px 0 6px 32px;padding:8px 12px;border:1px dashed var(--line);border-radius:8px}
 .files{list-style:none;margin:6px 0;padding:0;display:grid;gap:6px}.files li{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.thumb{width:56px;height:56px;object-fit:cover;border-radius:6px;border:1px solid var(--line)}.upl{cursor:pointer;display:inline-block}
@@ -1162,6 +1162,7 @@ function effRes(ym,r){var md=monData(ym),v=md.res[r.id]||{},ls=r.id==='r7'?loanS
   var res=v.r&&v.r!=='해당없음'?v.r:(ls?ls.res:(v.r||'해당없음'));
   var note=v.n||(ls?ls.note:'');
   return {r:res,n:note,auto:!!ls&&!(v.r&&v.r!=='해당없음')};}
+function monFile(ym){return '정보부 월간 보고서('+(+ym.slice(5,7))+'월)';}
 function monTitle(ym){return ym.slice(0,4)+'년 '+(+ym.slice(5,7))+'월';}
 function monReport(ym,asHtml){
   var m=monInit(),md=monData(ym),ch=staffChanges(ym),st=staffNow(ym),cnt=Object.keys(ch).length;
@@ -1174,15 +1175,24 @@ function monReport(ym,asHtml){
     GROUPS.forEach(function(g){if(grp[g]){t+='\n<'+g+'>\n'+grp[g].map(function(p){return [p.role,p.name||'(미입력)',p.docs||'',chtxt(p)].join('\t');}).join('\n');}});
     return t;
   }
-  var h='<div style="font-family:Malgun Gothic,sans-serif"><h3 style="margin:0 0 6px">'+esc(monTitle(ym))+' 월간 정보보안·개인정보 보호 점검 결과</h3><p style="margin:0 0 8px">점검일: '+esc(dayTxt(ym))+'</p>';
-  h+='<table style="border-collapse:collapse;width:100%"><tr><th style="'+th+'">구분</th><th style="'+th+'">점검 항목</th><th style="'+th+'">결과</th><th style="'+th+'">비고</th></tr>';
-  rows.forEach(function(r){h+='<tr><td style="'+td+'">'+esc(r[0])+'</td><td style="'+td+'">'+esc(r[1])+'</td><td style="'+td+'">'+esc(r[2])+'</td><td style="'+td+'">'+esc(r[3])+'</td></tr>';});
-  h+='</table><p style="margin:12px 0 4px"><b>현행화 항목</b> '+(cnt?'(변경 '+cnt+'건)':'(변경 없음)')+'</p><table style="border-collapse:collapse;width:100%"><tr><th style="'+th+'">항목</th><th style="'+th+'">현재 내용</th><th style="'+th+'">관련 문서</th><th style="'+th+'">변경</th></tr>';
+  var B='border:1px solid #555;',P='padding:5px 7px;',fz='font-size:9.5pt;line-height:1.45;word-break:keep-all;overflow-wrap:anywhere;';
+  var th=B+P+'background:#e9edf0;font-weight:700;text-align:center;'+fz,td=B+P+fz,tc=td+'text-align:center;',tg=B+P+'background:#f3f5f6;font-weight:700;'+fz;
+  var mon=+ym.slice(5,7);
+  var h='<div style="font-family:Malgun Gothic,Apple SD Gothic Neo,sans-serif;color:#111;max-width:100%">'
+   +'<div style="text-align:center;margin:0 0 14px"><div style="font-size:18pt;font-weight:800;letter-spacing:-.5px">'+esc(monTitle(ym))+' 정보부 월간 보고서</div><div style="font-size:11pt;color:#444;margin-top:3px">정보보안·개인정보 보호 점검 결과</div></div>'
+   +'<table style="border-collapse:collapse;width:100%;table-layout:fixed;margin:0 0 12px"><tr><td style="'+B+P+'background:#e9edf0;font-weight:700;width:16%;text-align:center;'+fz+'">점검일</td><td style="'+td+'">'+esc(dayTxt(ym))+'</td><td style="'+B+P+'background:#e9edf0;font-weight:700;width:16%;text-align:center;'+fz+'">작성</td><td style="'+td+'">수입초등학교 정보부</td></tr></table>'
+   +'<div style="font-size:11pt;font-weight:800;margin:0 0 5px">1. 점검 결과</div>'
+   +'<table style="border-collapse:collapse;width:100%;table-layout:fixed"><colgroup><col style="width:17%"><col style="width:41%"><col style="width:13%"><col style="width:29%"></colgroup><thead><tr><th style="'+th+'">구분</th><th style="'+th+'">점검 항목</th><th style="'+th+'">결과</th><th style="'+th+'">비고</th></tr></thead><tbody>';
+  rows.forEach(function(r){var bad=(r[2]!=='해당없음'&&r[2]!=='양호');h+='<tr style="page-break-inside:avoid"><td style="'+tc+'">'+esc(r[0])+'</td><td style="'+td+'">'+esc(r[1])+'</td><td style="'+tc+(bad?'font-weight:700;':'')+'">'+esc(r[2])+'</td><td style="'+td+'">'+esc(r[3])+'</td></tr>';});
+  h+='</tbody></table>'
+   +'<div style="font-size:11pt;font-weight:800;margin:16px 0 5px">2. 현행화 항목 <span style="font-weight:400;font-size:10pt;color:#444">'+(cnt?'(변경 '+cnt+'건)':'(변경 없음)')+'</span></div>'
+   +'<table style="border-collapse:collapse;width:100%;table-layout:fixed"><colgroup><col style="width:26%"><col style="width:40%"><col style="width:22%"><col style="width:12%"></colgroup><thead><tr><th style="'+th+'">항목</th><th style="'+th+'">현재 내용</th><th style="'+th+'">관련 문서</th><th style="'+th+'">변경</th></tr></thead><tbody>';
   GROUPS.forEach(function(g){if(!grp[g])return;
-    h+='<tr><td colspan="4" style="'+tg+'">'+esc(g)+'</td></tr>';
-    grp[g].forEach(function(p){h+='<tr><td style="'+td+'">'+esc(p.role)+'</td><td style="'+td+'">'+esc(p.name||'(미입력)')+'</td><td style="'+td+'">'+esc(p.docs||'')+'</td><td style="'+td+'">'+esc(chtxt(p))+'</td></tr>';});
+    h+='<tr style="page-break-inside:avoid;page-break-after:avoid"><td colspan="4" style="'+tg+'">'+esc(g)+'</td></tr>';
+    grp[g].forEach(function(p){var c=ch[p.id];h+='<tr style="page-break-inside:avoid"><td style="'+td+'">'+esc(p.role)+'</td><td style="'+td+'">'+esc(p.name||'(미입력)')+'</td><td style="'+td+'font-size:8.5pt;">'+esc(p.docs||'')+'</td><td style="'+tc+(c?'font-weight:700;':'')+'">'+(c?'변경':'없음')+'</td></tr>';
+      if(c)h+='<tr style="page-break-inside:avoid"><td colspan="4" style="'+td+'font-size:8.5pt;color:#444;">변경 전: '+esc(c)+'</td></tr>';});
   });
-  return h+'</table></div>';
+  return h+'</tbody></table></div>';
 }
 function monBody(ym){
   return '1. 관련: 경기도교육청 정보보안 기본지침 제10조(사이버보안진단의 날)\n2. '+monTitle(ym)+' 사이버보안진단의 날 및 월간 정보보안·개인정보 보호 점검 결과를 붙임과 같이 보고합니다.\n\n붙임  '+monTitle(ym)+' 월간 정보보안·개인정보 보호 점검 결과 1부.  끝.';
@@ -1246,10 +1256,10 @@ view.addEventListener('click',function(e){
     save();renderAll();scTo(0,y);
   }
   else if(a==='print'){
-    try{window.print();monMsg('인쇄 창에서 "PDF로 저장"을 고르세요. 창이 안 열리면 "인쇄용 파일 저장"을 쓰세요.');}catch(err){monMsg('이 화면에서는 인쇄가 막혀 있습니다. "인쇄용 파일 저장"을 쓰세요.');}
+    try{var oT=document.title;document.title=monFile(ym);var rT=function(){document.title=oT;window.removeEventListener('afterprint',rT);};window.addEventListener('afterprint',rT);setTimeout(rT,60000);window.print();monMsg('인쇄 창에서 "PDF로 저장"을 고르세요(파일 이름은 자동으로 정해집니다. 위·아래 작은 글씨를 없애려면 "머리글 및 바닥글"을 끄세요). 창이 안 열리면 "인쇄용 파일 저장"을 쓰세요.');}catch(err){monMsg('이 화면에서는 인쇄가 막혀 있습니다. "인쇄용 파일 저장"을 쓰세요.');}
   }
   else if(a==='savehtml'){
-    var doc='<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>'+ym+' 월간 점검 결과</title><style>body{font-family:Malgun Gothic,sans-serif;margin:0}@page{size:A4;margin:15mm}</style></head><body>'+monReport(ym,true)+'<script>window.onload=function(){setTimeout(function(){window.print();},300);};<\/scr'+'ipt></body></html>';
+    var doc='<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>'+monFile(ym)+'</title><style>body{font-family:Malgun Gothic,sans-serif;margin:0}@page{size:A4;margin:15mm}</style></head><body>'+monReport(ym,true)+'<script>window.onload=function(){setTimeout(function(){window.print();},300);};<\/scr'+'ipt></body></html>';
     try{var bl=new Blob([doc],{type:'text/html'});var u=URL.createObjectURL(bl);var an=document.createElement('a');an.href=u;an.download=ym+'_월간점검결과.html';document.body.appendChild(an);an.click();setTimeout(function(){document.body.removeChild(an);URL.revokeObjectURL(u);},1500);monMsg('저장했습니다. 파일을 열면 인쇄 창이 뜹니다. 거기서 "PDF로 저장"을 고르세요. 저장이 안 되면 "PDF로 인쇄"를 쓰세요.');}catch(err){monMsg('저장하지 못했습니다. "PDF로 인쇄"를 쓰세요.');}
   }
   else if(a==='cpbody'){
