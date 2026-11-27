@@ -179,6 +179,8 @@ body.locked #lock{display:flex}
     </div>
     <div class="tools">
       <button class="btn mnav" id="mnav" type="button">단계 목록</button>
+      <a class="btn sm" id="webapp" href="https://script.google.com/macros/s/AKfycbygoBlCl2TjbH3VzR83oj4PDFJMln0Ya1ArQeIDMhJfGt836ePT32LsS8E80PRcxbUA/exec" target="_blank" rel="noopener" style="text-decoration:none">웹앱 열기</a>
+      <button class="btn sm" id="expdata" type="button">데이터 복사</button>
       <span class="who" id="who"></span><span class="sm2 sync" id="sync"></span>
       <button class="btn sm" id="adm_open" type="button" style="display:none">담당자 관리</button>
       <button class="btn sm" id="chgpw" type="button">이름·암호 변경</button>
@@ -1381,9 +1383,16 @@ if(state.cur<0||state.cur>=STEPS.length||!unlockedStrict(state.cur))state.cur=0;
 renderAll();
 
 /* ---------- 로그인, 서버 저장(Apps Script) ---------- */
+var GAS_URL='https://script.google.com/macros/s/AKfycbygoBlCl2TjbH3VzR83oj4PDFJMln0Ya1ArQeIDMhJfGt836ePT32LsS8E80PRcxbUA/exec';
 function gs(fn){var a=[].slice.call(arguments,1);return new Promise(function(res,rej){
-  if(!(window.google&&google.script&&google.script.run)){rej(new Error('noserver'));return;}
-  var r=google.script.run.withSuccessHandler(res).withFailureHandler(rej);r[fn].apply(r,a);});}
+  if(window.google&&google.script&&google.script.run){
+    var r=google.script.run.withSuccessHandler(res).withFailureHandler(rej);r[fn].apply(r,a);return;}
+  if(!window.fetch){rej(new Error('noserver'));return;}
+  fetch(GAS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn:fn,args:a})})
+    .then(function(r){return r.json();})
+    .then(function(j){if(j&&j.error)rej(new Error(j.error));else res(j?j.result:null);})
+    .catch(function(){rej(new Error('noserver'));});
+});}
 (function(){
   var el=function(i){return document.getElementById(i);};
   var SHARED=['checks','free','urls','info','custom','qa','loans','att','fld','mon'];
@@ -1416,7 +1425,7 @@ function gs(fn){var a=[].slice.call(arguments,1);return new Promise(function(res
   function loadRoster(){
     msg('불러오는 중...');
     gs('getRoster').then(function(r){roster=r;drawRoster();msg('');setUI('pick');}).catch(function(e){
-      msg(e&&e.message==='noserver'?'이 화면은 Apps Script 웹앱으로 열어야 로그인됩니다.':'서버에 연결하지 못했습니다. 잠시 뒤 새로고침하세요.');});
+      msg('서버에 연결하지 못했습니다. 잠시 뒤 새로고침하세요.');});
   }
   el('roleBtns').addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-role]');if(!b)return;role=b.getAttribute('data-role');msg('');setUI('pw');});
   el('lockBack').addEventListener('click',function(){msg('');setUI('pick');});
@@ -1544,9 +1553,7 @@ function gs(fn){var a=[].slice.call(arguments,1);return new Promise(function(res
     var f=e.target.closest&&e.target.closest('[data-fid]');
     if(f){e.preventDefault();var id=f.getAttribute('data-fid');getUrl(id).then(function(o){openBlobUrl(o,f.textContent);}).catch(function(){});return;}
     var d=e.target.closest&&e.target.closest('[data-edu]');
-    if(d&&sess){e.preventDefault();
-      if(urls.edu){openBlobUrl(urls.edu,'수탁자_개인정보_보호_교육자료.pdf');return;}
-      gs('getEdu',sess.token).then(function(r){urls.edu={url:URL.createObjectURL(toBlob(r.b64,r.ct)),name:r.name};openBlobUrl(urls.edu,r.name);}).catch(function(){});}
+    if(d&&sess){e.preventDefault();window.open('edu/suitak_edu.pdf','_blank');}
   });
   /* 내 이름·암호 변경, 로그아웃 */
   el('chgpw').addEventListener('click',function(){if(!sess)return;el('nm').value=sess.name||'';setUI('change');msg('');});
