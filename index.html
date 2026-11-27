@@ -1553,7 +1553,7 @@ function gs(fn){var a=[].slice.call(arguments,1);return new Promise(function(res
     var f=e.target.closest&&e.target.closest('[data-fid]');
     if(f){e.preventDefault();var id=f.getAttribute('data-fid');getUrl(id).then(function(o){openBlobUrl(o,f.textContent);}).catch(function(){});return;}
     var d=e.target.closest&&e.target.closest('[data-edu]');
-    if(d&&sess){e.preventDefault();window.open('edu/suitak_edu.pdf','_blank');}
+    if(d&&sess){e.preventDefault();window.open('suitak_edu.pdf','_blank');}
   });
   /* 내 이름·암호 변경, 로그아웃 */
   el('chgpw').addEventListener('click',function(){if(!sess)return;el('nm').value=sess.name||'';setUI('change');msg('');});
